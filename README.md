@@ -151,12 +151,6 @@ badilni-admin/
 │   ├── environments/                     # Environment-specific config
 │   │   ├── environment.development.ts    # Dev-specific variables (local API, debug flags)
 │   │   └── environment.ts               # Default/production environment variables
-│   ├── app.config.ts
-│   ├── app.css
-│   ├── app.html
-│   ├── app.routes.ts
-│   ├── app.spec.ts                       # ✅ Tests: root app component bootstrap
-│   ├── app.ts
 │   ├── index.html
 │   ├── main.ts
 │   └── styles.css
