@@ -114,34 +114,40 @@ badilni-admin/
 │   │   │       ├── users.html
 │   │   │       ├── users.spec.ts         # ✅ Tests: user table, search & actions
 │   │   │       └── users.ts
-│   │   └── shared/                       # Reusable components, directives, pipes
-│   │       ├── components/
-│   │       │   ├── layout/
-│   │       │   │   ├── layout.css
-│   │       │   │   ├── layout.html
-│   │       │   │   ├── layout.spec.ts    # ✅ Tests: shell rendering & outlet projection
-│   │       │   │   └── layout.ts
-│   │       │   └── sidebar/
-│   │       │       ├── sidebar.css
-│   │       │       ├── sidebar.html
-│   │       │       ├── sidebar.spec.ts   # ✅ Tests: nav links & active route state
-│   │       │       └── sidebar.ts
-│   │       ├── directives/
-│   │       │   ├── auto-focus.spec.ts    # ✅ Tests: focus triggered on init
-│   │       │   ├── auto-focus.ts
-│   │       │   ├── click-outside.spec.ts # ✅ Tests: event emitted on outside click
-│   │       │   ├── click-outside.ts
-│   │       │   ├── has-role.spec.ts      # ✅ Tests: element visibility by role
-│   │       │   ├── has-role.ts
-│   │       │   └── index.ts             # Barrel export
-│   │       └── pipes/
-│   │           ├── credit-format-pipe.spec.ts  # ✅ Tests: currency formatting cases
-│   │           ├── credit-format-pipe.ts
-│   │           ├── index.ts                    # Barrel export
-│   │           ├── time-ago-pipe.spec.ts        # ✅ Tests: relative time accuracy
-│   │           ├── time-ago-pipe.ts
-│   │           ├── truncate-pipe.spec.ts        # ✅ Tests: length limits & ellipsis
-│   │           └── truncate-pipe.ts
+│   │   ├── shared/                       # Reusable components, directives, pipes
+│   │   │   ├── components/
+│   │   │   │   ├── layout/
+│   │   │   │   │   ├── layout.css
+│   │   │   │   │   ├── layout.html
+│   │   │   │   │   ├── layout.spec.ts    # ✅ Tests: shell rendering & outlet projection
+│   │   │   │   │   └── layout.ts
+│   │   │   │   └── sidebar/
+│   │   │   │       ├── sidebar.css
+│   │   │   │       ├── sidebar.html
+│   │   │   │       ├── sidebar.spec.ts   # ✅ Tests: nav links & active route state
+│   │   │   │       └── sidebar.ts
+│   │   │   ├── directives/
+│   │   │   │   ├── auto-focus.spec.ts    # ✅ Tests: focus triggered on init
+│   │   │   │   ├── auto-focus.ts
+│   │   │   │   ├── click-outside.spec.ts # ✅ Tests: event emitted on outside click
+│   │   │   │   ├── click-outside.ts
+│   │   │   │   ├── has-role.spec.ts      # ✅ Tests: element visibility by role
+│   │   │   │   ├── has-role.ts
+│   │   │   │   └── index.ts             # Barrel export
+│   │   │   └── pipes/
+│   │   │       ├── credit-format-pipe.spec.ts  # ✅ Tests: currency formatting cases
+│   │   │       ├── credit-format-pipe.ts
+│   │   │       ├── index.ts                    # Barrel export
+│   │   │       ├── time-ago-pipe.spec.ts        # ✅ Tests: relative time accuracy
+│   │   │       ├── time-ago-pipe.ts
+│   │   │       ├── truncate-pipe.spec.ts        # ✅ Tests: length limits & ellipsis
+│   │   │       └── truncate-pipe.ts
+│   │   ├── app.config.ts
+│   │   ├── app.css
+│   │   ├── app.html
+│   │   ├── app.routes.ts
+│   │   ├── app.spec.ts
+│   │   └──app.ts
 │   ├── environments/                     # Environment-specific config
 │   │   ├── environment.development.ts    # Dev-specific variables (local API, debug flags)
 │   │   └── environment.ts               # Default/production environment variables
@@ -155,10 +161,13 @@ badilni-admin/
 │   ├── main.ts
 │   └── styles.css
 ├── angular.json
+├── package-lock.json
 ├── package.json
-├── tsconfig.json
+├── postcss.config.js                     # for Tailwind CSS
+├── README.md
 ├── tsconfig.app.json
-└── README.md
+├── tsconfig.json
+└── tsconfig.spec.json
 ```
 
 ---
