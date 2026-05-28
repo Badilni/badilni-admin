@@ -74,7 +74,7 @@ describe('Login Component', () => {
     expect(component.particles.length).toBe(15);
   });
 
-  // ── Signals initial state ─────────────────────────────────────────
+  // Signals initial state
   it('should initialize signals correctly', () => {
     expect(component.showPassword()).toBeFalse();
     expect(component.isLoading()).toBeFalse();
@@ -85,7 +85,7 @@ describe('Login Component', () => {
     expect(component.loginError()).toBe('');
   });
 
-  // ── Toggle password ───────────────────────────────────────────────
+  // Toggle password
   it('should toggle showPassword signal', () => {
     component.togglePassword();
     expect(component.showPassword()).toBeTrue();
@@ -93,7 +93,7 @@ describe('Login Component', () => {
     expect(component.showPassword()).toBeFalse();
   });
 
-  // ── Email validation ──────────────────────────────────────────────
+  // Email validation
   it('should set emailError when email is empty on blur', () => {
     component.loginData.email = '';
     component.onEmailBlur();
@@ -113,7 +113,7 @@ describe('Login Component', () => {
     expect(component.emailError()).toBe('');
   });
 
-  // ── Password validation ───────────────────────────────────────────
+  // Password validation
   it('should set passwordError when password is empty on blur', () => {
     component.loginData.password = '';
     component.onPasswordBlur();
@@ -133,7 +133,7 @@ describe('Login Component', () => {
     expect(component.passwordError()).toBe('');
   });
 
-  // ── Form submission ───────────────────────────────────────────────
+  // Form submission
   it('should not call authService if form is invalid', async () => {
     component.loginData.email = '';
     component.loginData.password = '';
@@ -190,7 +190,7 @@ describe('Login Component', () => {
     expect(component.isLoading()).toBeFalse();
   }));
 
-  // ── Forgot password ───────────────────────────────────────────────
+  // Forgot password 
   it('should navigate to forgot-password and prevent default', () => {
     const mockEvent = new MouseEvent('click');
     spyOn(mockEvent, 'preventDefault');
@@ -201,7 +201,7 @@ describe('Login Component', () => {
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/auth/forgot-password']);
   });
 
-  // ── Remember me ───────────────────────────────────────────────────
+  // Remember me
   it('should save email to localStorage when rememberMe is true', fakeAsync(() => {
     spyOn(localStorage, 'setItem');
     authServiceSpy.login.and.returnValue(of(mockAdminResponse));

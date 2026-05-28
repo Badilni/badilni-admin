@@ -52,7 +52,7 @@ describe('ResetPassword Component', () => {
     expect(component).toBeTruthy();
   });
 
-  // ── ngOnInit ──────────────────────────────────────────────────────
+  // ngOnInit
   it('should read email from query params on init', () => {
     expect(component.email).toBe('admin@badilni.com');
   });
@@ -65,7 +65,7 @@ describe('ResetPassword Component', () => {
     expect(component.email).toBe('');
   });
 
-  // ── Initial state ─────────────────────────────────────────────────
+  // Initial state
   it('should initialize signals correctly', () => {
     expect(component.isLoading()).toBeFalse();
     expect(component.showPassword()).toBeFalse();
@@ -76,7 +76,7 @@ describe('ResetPassword Component', () => {
     expect(component.errorMessage()).toBe('');
   });
 
-  // ── Toggle password ───────────────────────────────────────────────
+  // Toggle password
   it('should toggle showPassword', () => {
     component.togglePassword();
     expect(component.showPassword()).toBeTrue();
@@ -89,7 +89,7 @@ describe('ResetPassword Component', () => {
     expect(component.showConfirmPassword()).toBeTrue();
   });
 
-  // ── Code validation ───────────────────────────────────────────────
+  // Code validation
   it('should set codeError when code is empty', () => {
     component.code = '';
     component.onCodeBlur();
@@ -108,7 +108,7 @@ describe('ResetPassword Component', () => {
     expect(component.codeError()).toBe('');
   });
 
-  // ── Password validation ───────────────────────────────────────────
+  // Password validation
   it('should set passwordError when password is empty', () => {
     component.newPassword = '';
     component.onPasswordBlur();
@@ -127,7 +127,7 @@ describe('ResetPassword Component', () => {
     expect(component.passwordError()).toBe('');
   });
 
-  // ── Confirm password validation ───────────────────────────────────
+  // Confirm password validation
   it('should set confirmPasswordError when confirm is empty', () => {
     component.confirmPassword = '';
     component.onConfirmPasswordBlur();
@@ -148,7 +148,7 @@ describe('ResetPassword Component', () => {
     expect(component.confirmPasswordError()).toBe('');
   });
 
-  // ── Form submit ───────────────────────────────────────────────────
+  // Form submit
   it('should not call authService when form is invalid', () => {
     component.code = '';
     component.newPassword = '';
@@ -213,7 +213,7 @@ describe('ResetPassword Component', () => {
     expect(component.isLoading()).toBeFalse();
   }));
 
-  // ── Navigation ────────────────────────────────────────────────────
+  // Navigation 
   it('should navigate to login', () => {
     component.goToLogin();
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/auth/login']);

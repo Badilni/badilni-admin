@@ -38,7 +38,7 @@ export class Auth {
     private router: Router,
   ) {}
 
-  // ── Token helpers ──────────────────────────────────────────────
+  // Token helpers
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
   }
@@ -71,7 +71,7 @@ export class Auth {
     this.isLoggedIn.set(false);
   }
 
-  // ── Auth endpoints ─────────────────────────────────────────────
+  // Auth endpoints
   login(payload: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, payload, { withCredentials: true }).pipe(
       tap((res) => {
@@ -169,7 +169,7 @@ export class Auth {
       );
   }
 
-  // ── Error handler ──────────────────────────────────────────────
+  // Error handler 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let message = 'An unexpected error occurred. Please try again.';
 

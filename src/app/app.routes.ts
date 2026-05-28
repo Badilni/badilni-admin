@@ -3,14 +3,14 @@ import { authGuard } from './core/guards/auth-guard';
 import { adminGuard } from './core/guards/admin-guard';
 
 export const routes: Routes = [
-  // ── Root redirect ──────────────────────────────────────────────
+  // Root redirect
   {
     path: '',
     redirectTo: 'dashboard',
     pathMatch: 'full',
   },
 
-  // ── Auth routes (public) ───────────────────────────────────────
+  // Auth routes (public)
   {
     path: 'auth',
     children: [
@@ -48,7 +48,7 @@ export const routes: Routes = [
     ],
   },
 
-  // ── Protected admin routes ─────────────────────────────────────
+  // Protected admin routes
   {
     path: 'dashboard',
     canActivate: [adminGuard],
@@ -98,14 +98,14 @@ export const routes: Routes = [
       import('./features/audit-log/audit-log').then((m) => m.AuditLog),
   },
 
-  // ── Forbidden page ─────────────────────────────────────────────
+  // Forbidden page
   {
     path: 'forbidden',
     loadComponent: () =>
       import('./features/auth/login/login').then((m) => m.Login),
   },
 
-  // ── Wildcard ───────────────────────────────────────────────────
+  // Wildcard
   {
     path: '**',
     redirectTo: 'dashboard',

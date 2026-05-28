@@ -57,7 +57,7 @@ describe('VerifyEmail Component', () => {
     expect(component).toBeTruthy();
   });
 
-  // ── ngOnInit ──────────────────────────────────────────────────────
+  // ngOnInit
   it('should read email from query params', () => {
     expect(component.email).toBe('admin@badilni.com');
   });
@@ -70,7 +70,7 @@ describe('VerifyEmail Component', () => {
     expect(component.email).toBe('');
   });
 
-  // ── Initial state ─────────────────────────────────────────────────
+  // Initial state
   it('should initialize signals with correct defaults', () => {
     expect(component.isLoading()).toBeFalse();
     expect(component.isResending()).toBeFalse();
@@ -80,7 +80,7 @@ describe('VerifyEmail Component', () => {
     expect(component.resendCooldown()).toBe(0);
   });
 
-  // ── Code validation ───────────────────────────────────────────────
+  // Code validation
   it('should set codeError when code is empty on blur', () => {
     component.code = '';
     component.onCodeBlur();
@@ -100,7 +100,7 @@ describe('VerifyEmail Component', () => {
     expect(component.codeError()).toBe('');
   });
 
-  // ── Submit ────────────────────────────────────────────────────────
+  // Submit
   it('should not call authService when code is invalid', () => {
     component.code = '';
     component.onSubmit();
@@ -147,7 +147,7 @@ describe('VerifyEmail Component', () => {
     expect(component.isLoading()).toBeFalse();
   }));
 
-  // ── Resend code ───────────────────────────────────────────────────
+  // Resend code
   it('should call resendVerification with correct email', fakeAsync(() => {
     authServiceSpy.resendVerification.and.returnValue(
       of({ status: 'success', message: 'Code sent' })
@@ -204,7 +204,7 @@ describe('VerifyEmail Component', () => {
     expect(component.isResending()).toBeFalse();
   }));
 
-  // ── Navigation ────────────────────────────────────────────────────
+  // Navigation 
   it('should navigate to login on goToLogin()', () => {
     component.goToLogin();
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/auth/login']);

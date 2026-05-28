@@ -34,7 +34,7 @@ describe('ForgotPassword Component', () => {
     expect(component).toBeTruthy();
   });
 
-  // ── Initial state ─────────────────────────────────────────────────
+  // Initial state
   it('should initialize with empty state', () => {
     expect(component.email).toBe('');
     expect(component.isLoading()).toBeFalse();
@@ -44,7 +44,7 @@ describe('ForgotPassword Component', () => {
     expect(component.errorMessage()).toBe('');
   });
 
-  // ── Email validation ──────────────────────────────────────────────
+  // Email validation
   it('should set error when email is empty on blur', () => {
     component.email = '';
     component.onEmailBlur();
@@ -63,7 +63,7 @@ describe('ForgotPassword Component', () => {
     expect(component.emailError()).toBe('');
   });
 
-  // ── Submit ────────────────────────────────────────────────────────
+  // Submit
   it('should not call authService if email is invalid', () => {
     component.email = '';
     component.onSubmit();
@@ -108,7 +108,7 @@ describe('ForgotPassword Component', () => {
     expect(authServiceSpy.forgotPassword).toHaveBeenCalledWith({ email: 'admin@badilni.com' });
   }));
 
-  // ── Navigation ────────────────────────────────────────────────────
+  // Navigation 
   it('should navigate to reset-password with email param', () => {
     component.email = 'admin@badilni.com';
     component.goToResetPassword();

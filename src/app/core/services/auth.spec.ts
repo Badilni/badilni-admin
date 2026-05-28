@@ -47,7 +47,7 @@ describe('Auth Service', () => {
     expect(service).toBeTruthy();
   });
 
-  // ── Initial state ───────────────────────────────────────────────
+  // Initial state
   it('should initialize as logged out when no token exists', () => {
     expect(service.isLoggedIn()).toBeFalse();
     expect(service.currentUser()).toBeNull();
@@ -64,7 +64,7 @@ describe('Auth Service', () => {
     expect(freshService.currentUser()).toEqual(mockUser);
   });
 
-  // ── Token helpers ────────────────────────────────────────────────
+  // Token helpers
   it('getToken() should return null when no token', () => {
     expect(service.getToken()).toBeNull();
   });
@@ -77,7 +77,7 @@ describe('Auth Service', () => {
     expect(service.getToken()).toBe('mock-access-token');
   }));
 
-  // ── Login ────────────────────────────────────────────────────────
+  // Login
   it('should set token and user on successful login', fakeAsync(() => {
     service.login({ email: 'admin@badilni.com', password: 'password' }).subscribe((res) => {
       expect(res.accessToken).toBe('mock-access-token');
@@ -102,7 +102,7 @@ describe('Auth Service', () => {
     expect(errorMsg).toBe('Incorrect email or password');
   }));
 
-  // ── Logout ───────────────────────────────────────────────────────
+  // Logout
   it('should clear session and navigate to login on logout', fakeAsync(() => {
     spyOn(router, 'navigate');
     // Seed session
@@ -133,7 +133,7 @@ describe('Auth Service', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login']);
   }));
 
-  // ── Verify email ─────────────────────────────────────────────────
+  // Verify email
   it('should set token and user on successful email verification', fakeAsync(() => {
     service.verifyEmail({ email: 'test@test.com', code: 'ABC123' }).subscribe();
     const req = httpMock.expectOne(`${apiUrl}/verify-email`);
@@ -143,7 +143,7 @@ describe('Auth Service', () => {
     expect(service.isLoggedIn()).toBeTrue();
   }));
 
-  // ── Forgot password ──────────────────────────────────────────────
+  // Forgot password
   it('should call forgot-password endpoint', fakeAsync(() => {
     const mockRes: ApiResponse = { status: 'success', message: 'Email sent' };
     service.forgotPassword({ email: 'admin@badilni.com' }).subscribe((res) => {
@@ -155,7 +155,7 @@ describe('Auth Service', () => {
     tick();
   }));
 
-  // ── Reset password ───────────────────────────────────────────────
+  // Reset password
   it('should set token on successful password reset', fakeAsync(() => {
     service
       .resetPassword({ email: 'admin@badilni.com', code: 'ABC123', password: 'newPass123' })
@@ -167,7 +167,7 @@ describe('Auth Service', () => {
     expect(service.getToken()).toBe('mock-access-token');
   }));
 
-  // ── isAdmin computed ─────────────────────────────────────────────
+  // isAdmin computed
   it('isAdmin should return true for admin role', fakeAsync(() => {
     service.login({ email: 'admin@badilni.com', password: 'password' }).subscribe();
     const req = httpMock.expectOne(`${apiUrl}/login`);
@@ -188,7 +188,7 @@ describe('Auth Service', () => {
     expect(service.isAdmin()).toBeFalse();
   }));
 
-  // ── Refresh token ────────────────────────────────────────────────
+  // Refresh token
   it('should update token on successful refresh', fakeAsync(() => {
     service.refreshToken().subscribe();
     const req = httpMock.expectOne(`${apiUrl}/refresh`);
@@ -208,7 +208,7 @@ describe('Auth Service', () => {
     expect(service.isLoggedIn()).toBeFalse();
   }));
 
-  // ── Error handling ───────────────────────────────────────────────
+  // Error handling 
   it('should return network error message when status is 0', fakeAsync(() => {
     let errorMsg = '';
     service.login({ email: 'admin@badilni.com', password: 'pass' }).subscribe({
