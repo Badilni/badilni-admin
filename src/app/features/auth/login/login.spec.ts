@@ -3,21 +3,55 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
 
 import { Login } from './login';
+import { Auth } from '../../../core/services/auth';
+import { AuthResponse } from '../../../core/models/auth-response';
 
-describe('Login', () => {
+const mockAdminResponse: AuthResponse = {
+  status: 'success',
+  accessToken: 'mock-access-token',
+  data: {
+    user: {
+      _id: '123',
+      name: 'Admin User',
+      email: 'admin@badilni.com',
+      role: 'admin',
+      isVerified: true,
+    },
+  },
+};
+
+const mockUserResponse: AuthResponse = {
+  status: 'success',
+  accessToken: 'mock-access-token',
+  data: {
+    user: {
+      _id: '456',
+      name: 'Regular User',
+      email: 'user@badilni.com',
+      role: 'user',
+      isVerified: true,
+    },
+  },
+};
+
+describe('Login Component', () => {
   let component: Login;
   let fixture: ComponentFixture<Login>;
   let routerSpy: jasmine.SpyObj<Router>;
+  let authServiceSpy: jasmine.SpyObj<Auth>;
 
   beforeEach(async () => {
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    authServiceSpy = jasmine.createSpyObj('Auth', ['login', 'logout']);
 
     await TestBed.configureTestingModule({
       imports: [Login, FormsModule, NoopAnimationsModule],
       providers: [
         { provide: Router, useValue: routerSpy },
+        { provide: Auth, useValue: authServiceSpy },
       ],
     }).compileComponents();
 
@@ -40,7 +74,7 @@ describe('Login', () => {
     expect(component.particles.length).toBe(15);
   });
 
-  // ── Signals initial state ──
+  // ── Signals initial state ─────────────────────────────────────────
   it('should initialize signals correctly', () => {
     expect(component.showPassword()).toBeFalse();
     expect(component.isLoading()).toBeFalse();
@@ -51,7 +85,7 @@ describe('Login', () => {
     expect(component.loginError()).toBe('');
   });
 
-  // ── Toggle password ──
+  // ── Toggle password ───────────────────────────────────────────────
   it('should toggle showPassword signal', () => {
     component.togglePassword();
     expect(component.showPassword()).toBeTrue();
@@ -59,7 +93,7 @@ describe('Login', () => {
     expect(component.showPassword()).toBeFalse();
   });
 
-  // ── Email validation ──
+  // ── Email validation ──────────────────────────────────────────────
   it('should set emailError when email is empty on blur', () => {
     component.loginData.email = '';
     component.onEmailBlur();
@@ -79,7 +113,7 @@ describe('Login', () => {
     expect(component.emailError()).toBe('');
   });
 
-  // ── Password validation ──
+  // ── Password validation ───────────────────────────────────────────
   it('should set passwordError when password is empty on blur', () => {
     component.loginData.password = '';
     component.onPasswordBlur();
@@ -99,37 +133,64 @@ describe('Login', () => {
     expect(component.passwordError()).toBe('');
   });
 
-  // ── Form submission ──
-  it('should not proceed if form is invalid', async () => {
+  // ── Form submission ───────────────────────────────────────────────
+  it('should not call authService if form is invalid', async () => {
     component.loginData.email = '';
     component.loginData.password = '';
     await component.onSubmit();
-    expect(component.isLoading()).toBeFalse();
+    expect(authServiceSpy.login).not.toHaveBeenCalled();
   });
 
-  it('should set isLoading to true during submission', fakeAsync(() => {
+  it('should set isLoading to true during submission and false on success', fakeAsync(() => {
+    authServiceSpy.login.and.returnValue(of(mockAdminResponse));
+
     component.loginData.email = 'admin@badilni.com';
     component.loginData.password = 'securePass123';
-
     component.onSubmit();
-    expect(component.isLoading()).toBeTrue();
 
-    tick(1500);
+    tick();
     expect(component.isLoading()).toBeFalse();
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/dashboard']);
+  }));
+
+  it('should navigate to /dashboard after successful admin login', fakeAsync(() => {
+    authServiceSpy.login.and.returnValue(of(mockAdminResponse));
+
+    component.loginData.email = 'admin@badilni.com';
+    component.loginData.password = 'securePass123';
+    component.onSubmit();
+    tick();
+
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/dashboard']);
+  }));
+
+  it('should set loginError for non-admin user login', fakeAsync(() => {
+    authServiceSpy.login.and.returnValue(of(mockUserResponse));
+    authServiceSpy.logout.and.returnValue(of({ status: 'success' } as any));
+
+    component.loginData.email = 'user@badilni.com';
+    component.loginData.password = 'securePass123';
+    component.onSubmit();
+    tick();
+
+    expect(component.loginError()).toBe('Access restricted to admin accounts only.');
   }));
 
   it('should set loginError on failed login', fakeAsync(() => {
+    authServiceSpy.login.and.returnValue(
+      throwError(() => new Error('Incorrect email or password'))
+    );
+
     component.loginData.email = 'admin@badilni.com';
     component.loginData.password = 'wrongPassword123';
-
     component.onSubmit();
-    tick(1500);
+    tick();
 
-    expect(component.loginError()).toBe('Invalid credentials. Please try again.');
+    expect(component.loginError()).toBe('Incorrect email or password');
     expect(component.isLoading()).toBeFalse();
   }));
 
-  // ── Forgot password ──
+  // ── Forgot password ───────────────────────────────────────────────
   it('should navigate to forgot-password and prevent default', () => {
     const mockEvent = new MouseEvent('click');
     spyOn(mockEvent, 'preventDefault');
@@ -140,30 +201,33 @@ describe('Login', () => {
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/auth/forgot-password']);
   });
 
-  // ── Remember me ──
+  // ── Remember me ───────────────────────────────────────────────────
   it('should save email to localStorage when rememberMe is true', fakeAsync(() => {
     spyOn(localStorage, 'setItem');
+    authServiceSpy.login.and.returnValue(of(mockAdminResponse));
+
     component.loginData.email = 'admin@badilni.com';
     component.loginData.password = 'securePass123';
     component.loginData.rememberMe = true;
-
-    // patch the internal promise to resolve immediately for this test
-    // (note: real impl currently rejects — adjust when AuthService is wired)
     component.onSubmit();
-    tick(1500);
+    tick();
 
-    // loginError will be set (mock rejects), but rememberMe path is still tested
-    // once AuthService is real, this test confirms localStorage is called on success
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'badilni_remembered_email',
+      'admin@badilni.com'
+    );
   }));
 
   it('should remove email from localStorage when rememberMe is false', fakeAsync(() => {
     spyOn(localStorage, 'removeItem');
+    authServiceSpy.login.and.returnValue(of(mockAdminResponse));
+
     component.loginData.email = 'admin@badilni.com';
     component.loginData.password = 'securePass123';
     component.loginData.rememberMe = false;
-
     component.onSubmit();
-    tick(1500);
-    // Will be confirmed end-to-end once AuthService resolves
+    tick();
+
+    expect(localStorage.removeItem).toHaveBeenCalledWith('badilni_remembered_email');
   }));
 });

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { trigger, transition, style, animate, keyframes } from '@angular/animations';
+import { Auth } from '../../../core/services/auth';
+import { LoginRequest } from '../../../core/models/auth-response';
 
 export interface LoginData {
   email: string;
@@ -70,7 +72,6 @@ export interface LoginData {
     ]),
   ],
 })
-
 export class Login {
   loginData: LoginData = {
     email: '',
@@ -86,10 +87,12 @@ export class Login {
   passwordError = signal('');
   loginError = signal('');
 
-  // 15 particles for background animation
   readonly particles = Array.from({ length: 15 }, (_, i) => i);
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private authService: Auth,
+  ) {
     const remembered = localStorage.getItem('badilni_remembered_email');
     if (remembered) {
       this.loginData.email = remembered;
@@ -98,7 +101,7 @@ export class Login {
   }
 
   togglePassword(): void {
-    this.showPassword.update(v => !v);
+    this.showPassword.update((v) => !v);
   }
 
   onEmailBlur(): void {
@@ -145,23 +148,37 @@ export class Login {
     if (!isEmailValid || !isPasswordValid) return;
 
     this.isLoading.set(true);
-    try {
-      // TODO: replace with real AuthService.login() call
-      await new Promise<void>((_, reject) =>
-        setTimeout(() => reject({ message: 'Invalid credentials. Please try again.' }), 1200)
-      );
 
-      if (this.loginData.rememberMe) {
-        localStorage.setItem('badilni_remembered_email', this.loginData.email);
-      } else {
-        localStorage.removeItem('badilni_remembered_email');
-      }
-      this.router.navigate(['/dashboard']);
-    } catch (error: any) {
-      this.loginError.set(error?.message ?? 'Invalid credentials. Please try again.');
-    } finally {
-      this.isLoading.set(false);
-    }
+    const payload: LoginRequest = {
+      email: this.loginData.email,
+      password: this.loginData.password,
+    };
+
+    this.authService.login(payload).subscribe({
+      next: (res) => {
+        if (this.loginData.rememberMe) {
+          localStorage.setItem('badilni_remembered_email', this.loginData.email);
+        } else {
+          localStorage.removeItem('badilni_remembered_email');
+        }
+
+        // Redirect admins only
+        const user = res.data.user;
+        if (user.role !== 'admin') {
+          this.authService.logout().subscribe();
+          this.loginError.set('Access restricted to admin accounts only.');
+          this.isLoading.set(false);
+          return;
+        }
+
+        this.isLoading.set(false);
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err: Error) => {
+        this.loginError.set(err.message ?? 'Invalid credentials. Please try again.');
+        this.isLoading.set(false);
+      },
+    });
   }
 
   onForgotPassword(event: Event): void {

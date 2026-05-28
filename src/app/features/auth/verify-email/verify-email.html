@@ -1,0 +1,140 @@
+<div class="verify-wrapper">
+  <div class="particles-container">
+    @for (p of [0,1,2,3,4,5,6,7]; track p) {
+      <span class="particle"></span>
+    }
+  </div>
+  <div class="bg-wave"></div>
+
+  <div class="card-section">
+    <div class="verify-card" [@fadeSlide]>
+      <div class="card-shimmer"></div>
+
+      <!-- Back button -->
+      <button class="back-btn" type="button" (click)="goToLogin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back to Login
+      </button>
+
+      <!-- Icon -->
+      <div class="icon-container">
+        <div class="icon-circle">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="card-header">
+        <h2 class="card-title">Verify Your Email</h2>
+        <p class="card-subtitle">
+          We sent a 6-character code to
+          @if (email) {
+            <strong>{{ email }}</strong>
+          } @else {
+            your email address
+          }.
+          The code is valid for 2 hours.
+        </p>
+      </div>
+
+      <form class="verify-form" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Code input -->
+        <div
+          class="form-group"
+          [class.focused]="codeFocused()"
+          [class.error]="codeError()"
+        >
+          <label class="form-label" for="code">Verification Code</label>
+          <div class="input-wrapper">
+            <div class="input-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+              </svg>
+            </div>
+            <input
+              id="code"
+              type="text"
+              class="form-input code-input"
+              placeholder="ABC123"
+              [(ngModel)]="code"
+              name="code"
+              maxlength="6"
+              required
+              autocomplete="one-time-code"
+              (focus)="codeFocused.set(true)"
+              (blur)="onCodeBlur()"
+            />
+            <div class="input-focus-line"></div>
+          </div>
+          @if (codeError()) {
+            <span class="error-message">{{ codeError() }}</span>
+          }
+        </div>
+
+        <!-- Success alert -->
+        @if (successMessage()) {
+          <div class="alert-success" [@alertAnimation]>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+            </svg>
+            {{ successMessage() }}
+          </div>
+        }
+
+        <!-- Error alert -->
+        @if (errorMessage()) {
+          <div class="alert-error" [@alertAnimation]>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isLoading()"
+        >
+          @if (!isLoading()) {
+            <span>Verify Email</span>
+          } @else {
+            <span class="btn-loader">
+              <span class="loader-dot"></span>
+              <span class="loader-dot"></span>
+              <span class="loader-dot"></span>
+            </span>
+          }
+        </button>
+
+        <!-- Resend code -->
+        <div class="resend-section">
+          <span class="resend-text">Didn't receive the code?</span>
+          @if (resendCooldown() > 0) {
+            <span class="resend-cooldown">Resend in {{ resendCooldown() }}s</span>
+          } @else {
+            <button
+              type="button"
+              class="resend-btn"
+              [disabled]="isResending()"
+              (click)="resendCode()"
+            >
+              @if (isResending()) {
+                Sending...
+              } @else {
+                Resend Code
+              }
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
