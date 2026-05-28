@@ -44,6 +44,7 @@ badilni-admin/
 │   │   │   │   └── error-interceptor.ts       # Global HTTP error handling
 │   │   │   ├── models/
 │   │   │   │   ├── admin-action.ts
+│   │   │   │   ├── auth-response.ts
 │   │   │   │   ├── booking.ts
 │   │   │   │   ├── category.ts
 │   │   │   │   ├── dashboard-stats.ts
@@ -74,11 +75,27 @@ badilni-admin/
 │   │   │   │   ├── audit-log.html
 │   │   │   │   ├── audit-log.spec.ts     # ✅ Tests: component rendering & filters
 │   │   │   │   └── audit-log.ts
-│   │   │   ├── auth/login/
-│   │   │   │   ├── login.css
-│   │   │   │   ├── login.html
-│   │   │   │   ├── login.spec.ts         # ✅ Tests: form validation & auth flow
-│   │   │   │   └── login.ts
+│   │   │   ├── auth/
+│   │   │   │   ├── forgot-password/
+│   │   │   │   │   ├── forgot-password.css
+│   │   │   │   │   ├── forgot-password.html
+│   │   │   │   │   ├── forgot-password.spec.ts         
+│   │   │   │   │   └── forgot-password.ts
+│   │   │   │   ├── login/
+│   │   │   │   │   ├── login.css
+│   │   │   │   │   ├── login.html
+│   │   │   │   │   ├── login.spec.ts         # ✅ Tests: form validation & auth flow
+│   │   │   │   │   └── login.ts
+│   │   │   │   ├── reset-password/
+│   │   │   │   │   ├── reset-password.css
+│   │   │   │   │   ├── reset-password.html
+│   │   │   │   │   ├── reset-password.spec.ts         
+│   │   │   │   │   └── reset-password.ts
+│   │   │   │   └── verify-email/
+│   │   │   │       ├── verify-email.css
+│   │   │   │       ├── verify-email.html
+│   │   │   │       ├── verify-email.spec.ts         
+│   │   │   │       └── verify-email.ts
 │   │   │   ├── categories/
 │   │   │   │   ├── categories.css
 │   │   │   │   ├── categories.html
