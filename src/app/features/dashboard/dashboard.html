@@ -1,1 +1,291 @@
-<p>dashboard works!</p>
+<div class="dashboard-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Overview of platform activity</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading dashboard...</p>
+    </div>
+  }
+
+  @if (!isLoading() && stats()) {
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <!-- Active Users -->
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-info">
+            <span class="stat-label">Active Users</span>
+            <span class="stat-value">{{ formatNumber(stats()?.totalUsers) }}</span>
+            <span class="stat-change positive">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              12.5% vs last week
+            </span>
+          </div>
+          <div class="stat-icon stat-icon--blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sessions This Week -->
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-info">
+            <span class="stat-label">Sessions This Week</span>
+            <span class="stat-value">{{ formatNumber(stats()?.completedBookingsToday) }}</span>
+            <span class="stat-change positive">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              8.3% vs last week
+            </span>
+          </div>
+          <div class="stat-icon stat-icon--purple">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Open Disputes -->
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-info">
+            <span class="stat-label">Open Disputes</span>
+            <span class="stat-value">{{ formatNumber(stats()?.activeDisputes) }}</span>
+            <span class="stat-change positive">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              21.1% vs last week
+            </span>
+          </div>
+          <div class="stat-icon stat-icon--red">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Credit Circulation -->
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-info">
+            <span class="stat-label">Credit Circulation</span>
+            <span class="stat-value">{{ formatNumber(stats()?.totalRevenue) }} TC</span>
+            <span class="stat-change positive">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              15.7% vs last week
+            </span>
+          </div>
+          <div class="stat-icon stat-icon--teal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Users Today -->
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-info">
+            <span class="stat-label">New Users Today</span>
+            <span class="stat-value">{{ formatNumber(stats()?.newUsersToday) }}</span>
+            <span class="stat-change positive">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              11.2% vs yesterday
+            </span>
+          </div>
+          <div class="stat-icon stat-icon--orange">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="20" y1="8" x2="20" y2="14"/>
+              <line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Bookings -->
+      <div class="stat-card">
+        <div class="stat-card-body">
+          <div class="stat-info">
+            <span class="stat-label">Pending Bookings</span>
+            <span class="stat-value">{{ formatNumber(stats()?.pendingBookings) }}</span>
+            <span class="stat-change positive">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              6.4% vs yesterday
+            </span>
+          </div>
+          <div class="stat-icon stat-icon--indigo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+              <line x1="8" y1="14" x2="8" y2="14"/>
+              <line x1="12" y1="14" x2="12" y2="14"/>
+              <line x1="16" y1="14" x2="16" y2="14"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-grid">
+      <!-- Sessions Overview Line Chart -->
+      <div class="chart-card chart-card--large">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Sessions Overview</h3>
+            <p class="chart-subtitle">Last 7 days</p>
+          </div>
+        </div>
+        <div class="chart-body">
+          <div class="line-chart">
+            <div class="line-chart-bars">
+              @for (count of sessionCounts(); track $index) {
+                <div class="line-chart-col">
+                  <div
+                    class="line-chart-bar"
+                    [style.height.%]="getBarHeight(count)"
+                    [class.line-chart-bar--peak]="count === maxSessionCount()"
+                  >
+                    @if (count === maxSessionCount()) {
+                      <div class="line-chart-tooltip">{{ formatNumber(count) }}</div>
+                    }
+                  </div>
+                  <span class="line-chart-label">{{ sessionDates()[$index] }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sessions by Status Donut -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Sessions by Status</h3>
+            <p class="chart-subtitle">Last 7 days</p>
+          </div>
+        </div>
+        <div class="chart-body chart-body--donut">
+          <div class="donut-wrapper">
+            <svg viewBox="0 0 36 36" class="donut-svg">
+              <!-- Background -->
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f3f4f6" stroke-width="3"/>
+              <!-- Completed -->
+              <circle
+                cx="18" cy="18" r="15.9" fill="none"
+                stroke="#3b82f6" stroke-width="3"
+                stroke-dasharray="{{ getCompletedPercent() }} {{ 100 - getCompletedPercent() }}"
+                stroke-dashoffset="25"
+              />
+              <!-- Cancelled -->
+              <circle
+                cx="18" cy="18" r="15.9" fill="none"
+                stroke="#f59e0b" stroke-width="3"
+                stroke-dasharray="{{ getCancelledPercent() }} {{ 100 - getCancelledPercent() }}"
+                stroke-dashoffset="{{ 25 + (100 - getCompletedPercent()) }}"
+              />
+              <!-- Disputed -->
+              <circle
+                cx="18" cy="18" r="15.9" fill="none"
+                stroke="#ef4444" stroke-width="3"
+                stroke-dasharray="{{ getDisputedPercent() }} {{ 100 - getDisputedPercent() }}"
+                stroke-dashoffset="{{ 25 + (100 - getCompletedPercent()) + (100 - getCancelledPercent()) }}"
+              />
+            </svg>
+          </div>
+          <div class="donut-legend">
+            <div class="donut-legend-item">
+              <span class="donut-legend-dot donut-legend-dot--blue"></span>
+              <span class="donut-legend-label">Completed</span>
+              <span class="donut-legend-value">{{ chartsData()?.sessionsByStatus?.completed }} ({{ getCompletedPercent() }}%)</span>
+            </div>
+            <div class="donut-legend-item">
+              <span class="donut-legend-dot donut-legend-dot--yellow"></span>
+              <span class="donut-legend-label">Cancelled</span>
+              <span class="donut-legend-value">{{ chartsData()?.sessionsByStatus?.cancelled }} ({{ getCancelledPercent() }}%)</span>
+            </div>
+            <div class="donut-legend-item">
+              <span class="donut-legend-dot donut-legend-dot--red"></span>
+              <span class="donut-legend-label">Disputed</span>
+              <span class="donut-legend-value">{{ chartsData()?.sessionsByStatus?.disputed }} ({{ getDisputedPercent() }}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Credit Flow Bar Chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Credit Flow</h3>
+            <p class="chart-subtitle">Last 7 days</p>
+          </div>
+          <div class="chart-legend-inline">
+            <span class="legend-dot legend-dot--green"></span><span>In</span>
+            <span class="legend-dot legend-dot--red"></span><span>Out</span>
+          </div>
+        </div>
+        <div class="chart-body">
+          <div class="bar-chart">
+            @for (item of chartsData()?.creditFlow ?? []; track $index) {
+              <div class="bar-chart-col">
+                <div class="bar-chart-bars">
+                  <div
+                    class="bar-chart-bar bar-chart-bar--green"
+                    [style.height.px]="(item.income / 10000) * 60"
+                  ></div>
+                  <div
+                    class="bar-chart-bar bar-chart-bar--red"
+                    [style.height.px]="(Math.abs(item.outcome) / 10000) * 60"
+                  ></div>
+                </div>
+                <span class="bar-chart-label">{{ item.date }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

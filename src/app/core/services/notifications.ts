@@ -3,12 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Transaction } from '../models/transaction';
+import { Notification } from '../models/notification';
 
-export interface TransactionsResponse {
+export interface NotificationsResponse {
   status: string;
   data: {
-    transactions: Transaction[];
+    notifications: Notification[];
   };
   pagination: {
     page: number;
@@ -18,50 +18,62 @@ export interface TransactionsResponse {
   };
 }
 
-export interface TransactionResponse {
+export interface NotificationResponse {
   status: string;
   data: {
-    transaction: Transaction;
+    notification: Notification;
   };
 }
 
-export interface TransactionsQueryParams {
+export interface SendNotificationPayload {
+  title: string;
+  message: string;
+  type: 'system' | 'warning' | 'info' | 'success';
+  target: 'broadcast' | 'user';
+  userId?: string;
+}
+
+export interface NotificationsQueryParams {
   page?: number;
   limit?: number;
   type?: string;
-  status?: string;
   sort?: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
-export class Transactions {
-  // ⚠️ BACKEND NOT READY: /api/v1/transactions admin endpoint not yet implemented
-  private readonly apiUrl = `${environment.apiUrl}/transactions`;
+export class NotificationsService {
+  // ⚠️ BACKEND NOT READY: /api/v1/notifications admin endpoint not yet implemented
+  private readonly apiUrl = `${environment.apiUrl}/notifications`;
 
   constructor(private http: HttpClient) {}
 
-  getAll(params: TransactionsQueryParams = {}): Observable<TransactionsResponse> {
+  getAll(params: NotificationsQueryParams = {}): Observable<NotificationsResponse> {
     let httpParams = new HttpParams();
     if (params.page) httpParams = httpParams.set('page', params.page);
     if (params.limit) httpParams = httpParams.set('limit', params.limit);
     if (params.type) httpParams = httpParams.set('type', params.type);
-    if (params.status) httpParams = httpParams.set('status', params.status);
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
 
     return this.http
-      .get<TransactionsResponse>(this.apiUrl, { params: httpParams })
+      .get<NotificationsResponse>(this.apiUrl, { params: httpParams })
       .pipe(catchError(this.handleError));
   }
 
-  getById(id: string): Observable<Transaction> {
+  send(payload: SendNotificationPayload): Observable<Notification> {
     return this.http
-      .get<TransactionResponse>(`${this.apiUrl}/${id}`)
+      .post<NotificationResponse>(this.apiUrl, payload)
       .pipe(
-        map((res) => res.data.transaction),
+        map((res) => res.data.notification),
         catchError(this.handleError),
       );
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http
+      .delete<void>(`${this.apiUrl}/${id}`)
+      .pipe(catchError(this.handleError));
   }
 
   private handleError(error: unknown): Observable<never> {
