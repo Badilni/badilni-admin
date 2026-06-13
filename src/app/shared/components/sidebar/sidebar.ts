@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { NavItem } from '../../../core/models/nav-item';
+import { Auth } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,6 +13,8 @@ import { NavItem } from '../../../core/models/nav-item';
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
+  currentUser = computed(() => this.authService.currentUser());
+
   activeRoute = signal('/dashboard');
 
   readonly navItems: NavItem[] = [
@@ -25,7 +28,7 @@ export class Sidebar {
     { label: 'Audit Log', route: '/audit-log', iconKey: 'auditlog' },
   ];
 
-  constructor(private router: Router) {
+  constructor(private authService: Auth, private router: Router) {
     this.activeRoute.set(this.router.url);
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
@@ -38,5 +41,9 @@ export class Sidebar {
 
   navigate(route: string): void {
     this.router.navigate([route]);
+  }
+
+  onLogout(): void {
+    this.authService.logout().subscribe();
   }
 }
