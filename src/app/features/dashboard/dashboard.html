@@ -1,10 +1,10 @@
 <div class="dashboard-page">
-  <div class="page-header">
+  <!-- <div class="page-header">
     <div>
       <h1 class="page-title">Dashboard</h1>
       <p class="page-subtitle">Overview of platform activity</p>
     </div>
-  </div>
+  </div> -->
 
   @if (isLoading()) {
     <div class="loading-state">
@@ -213,24 +213,36 @@
               <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f3f4f6" stroke-width="3"/>
               <!-- Completed -->
               <circle
-                cx="18" cy="18" r="15.9" fill="none"
-                stroke="#3b82f6" stroke-width="3"
-                stroke-dasharray="{{ getCompletedPercent() }} {{ 100 - getCompletedPercent() }}"
+                cx="18"
+                cy="18"
+                r="15.9"
+                fill="none"
+                stroke="#3b82f6"
+                stroke-width="3"
+                [attr.stroke-dasharray]="getCompletedPercent() + ' ' + (100 - getCompletedPercent())"
                 stroke-dashoffset="25"
               />
               <!-- Cancelled -->
               <circle
-                cx="18" cy="18" r="15.9" fill="none"
-                stroke="#f59e0b" stroke-width="3"
-                stroke-dasharray="{{ getCancelledPercent() }} {{ 100 - getCancelledPercent() }}"
-                stroke-dashoffset="{{ 25 + (100 - getCompletedPercent()) }}"
+                cx="18"
+                cy="18"
+                r="15.9"
+                fill="none"
+                stroke="#f59e0b"
+                stroke-width="3"
+                [attr.stroke-dasharray]="getCancelledPercent() + ' ' + (100 - getCancelledPercent())"
+                [attr.stroke-dashoffset]="25 + (100 - getCompletedPercent())"
               />
               <!-- Disputed -->
               <circle
-                cx="18" cy="18" r="15.9" fill="none"
-                stroke="#ef4444" stroke-width="3"
-                stroke-dasharray="{{ getDisputedPercent() }} {{ 100 - getDisputedPercent() }}"
-                stroke-dashoffset="{{ 25 + (100 - getCompletedPercent()) + (100 - getCancelledPercent()) }}"
+                cx="18"
+                cy="18"
+                r="15.9"
+                fill="none"
+                stroke="#ef4444"
+                stroke-width="3"
+                [attr.stroke-dasharray]="getDisputedPercent() + ' ' + (100 - getDisputedPercent())"
+                [attr.stroke-dashoffset]="25 + (100 - getCompletedPercent()) + (100 - getCancelledPercent())"
               />
             </svg>
           </div>

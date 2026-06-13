@@ -11,6 +11,8 @@ import { DashboardStats } from '../../core/models/dashboard-stats';
   styleUrl: './dashboard.css',
 })
 export class Dashboard implements OnInit {
+  Math = Math;
+
   stats = signal<DashboardStats | null>(null);
   chartsData = signal<ChartsData | null>(null);
   isLoading = signal(true);
