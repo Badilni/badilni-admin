@@ -2,7 +2,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'provider' | 'admin';
   photo?: string;
   bio?: string;
   isVerified: boolean;
@@ -11,6 +11,9 @@ export interface User {
   creditsInEscrow?: number;
   totalSessionsCompleted?: number;
   averageRating?: number;
+  credits?: number;
+  sessions?: number;
+  status?: 'active' | 'inactive' | 'suspended';
   createdAt?: string;
   updatedAt?: string;
 }

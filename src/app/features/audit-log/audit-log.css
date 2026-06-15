@@ -1,0 +1,255 @@
+/* ── Page Wrapper ── */
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Page Header ── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-header__left { flex: 1; min-width: 0; }
+
+.page-header__right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--black-text);
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--grat-text);
+  margin: 0;
+}
+
+/* ── Select ── */
+.select-input {
+  padding: 0.55rem 2rem 0.55rem 0.75rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--black-text);
+  background: var(--whiteBackground);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  min-width: 150px;
+  transition: border-color 0.2s ease;
+}
+
+.select-input:focus { border-color: var(--primary-light); }
+
+/* ── Total Card ── */
+.total-card {
+  background: var(--primary-light);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  color: #fff;
+  min-width: 160px;
+}
+
+.total-card__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.total-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.85;
+  margin: 0 0 0.2rem;
+  white-space: nowrap;
+}
+
+.total-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+}
+
+.total-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Table Card ── */
+.table-card {
+  background: var(--whiteBackground);
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* ── Loading / Empty ── */
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+  color: var(--grat-text);
+  font-size: 0.9rem;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: var(--primary-light);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Table ── */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+}
+
+.data-table thead tr {
+  background: #f9fafb;
+  border-bottom: 1.5px solid #e5e7eb;
+}
+
+.data-table th {
+  padding: 0.85rem 1.25rem;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--grat-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 0.9rem 1.25rem;
+  font-size: 0.875rem;
+  color: var(--black-text);
+  border-bottom: 1px solid #f3f4f6;
+  white-space: nowrap;
+}
+
+.data-table tbody tr:hover       { background: #f9fafb; }
+.data-table tbody tr:last-child td { border-bottom: none; }
+
+/* Column Styles */
+.td-admin  { font-weight: 600; color: var(--primary-light); }
+.td-target { font-weight: 500; color: var(--primary-light); }
+.td-reason { color: var(--grat-text); max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.td-date   { color: var(--grat-text); font-size: 0.82rem; white-space: nowrap; }
+
+/* ── Action Badges ── */
+.action-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.action-badge--red     { background: rgba(239, 68,  68, 0.12);  color: #dc2626; }
+.action-badge--darkred { background: rgba(185, 28,  28, 0.12);  color: #b91c1c; }
+.action-badge--green   { background: rgba(16, 185, 129, 0.12);  color: #059669; }
+.action-badge--blue    { background: rgba(59, 130, 246, 0.12);  color: #2563eb; }
+.action-badge--purple  { background: rgba(139, 92, 246, 0.12);  color: #7c3aed; }
+.action-badge--teal    { background: rgba(20, 184, 166, 0.12);  color: #0d9488; }
+.action-badge--orange  { background: rgba(245, 158, 11, 0.12);  color: #d97706; }
+.action-badge--gray    { background: rgba(107, 114, 128, 0.12); color: #6b7280; }
+
+/* ── Pagination ── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #f3f4f6;
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 0.5rem;
+  border-radius: 8px;
+  border: 1.5px solid #e5e7eb;
+  background: var(--whiteBackground);
+  color: var(--black-text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+}
+
+.page-btn--active {
+  background: var(--primary-light);
+  color: #fff;
+  border-color: var(--primary-light);
+}
+
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .page-header        { flex-direction: column; }
+  .page-header__right { flex-direction: column; align-items: flex-start; width: 100%; }
+  .select-input       { width: 100%; min-width: unset; }
+  .total-card         { width: 100%; box-sizing: border-box; }
+}
+
+@media (max-width: 768px) {
+  .page-title { font-size: 1.3rem; }
+  .data-table th,
+  .data-table td { padding: 0.7rem 0.875rem; }
+  .td-reason { max-width: 140px; }
+}

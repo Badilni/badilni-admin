@@ -1,1 +1,145 @@
-<p>listings works!</p>
+<div class="page-wrapper">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">Skill Listings</h1>
+      <p class="page-subtitle">Manage all skill listings on the platform</p>
+    </div>
+    <button class="btn btn--primary" (click)="onNewListing()" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      New Listing
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="search-input-wrapper">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by title..."
+        [value]="searchKeyword()"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </div>
+    <select class="select-input" [value]="selectedStatus()" (change)="onStatusChange($any($event.target).value)">
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ status | titlecase }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading listings...</p>
+      </div>
+    }
+
+    @if (!isLoading() && listings().length === 0) {
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        <p>No listings found</p>
+      </div>
+    }
+
+    @if (!isLoading() && listings().length > 0) {
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Provider ID</th>
+              <th>Price (TC)</th>
+              <th>Tags</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (listing of listings(); track listing._id) {
+              <tr>
+                <td class="td-title">{{ listing.title }}</td>
+                <td class="td-provider">#{{ listing.provider }}</td>
+                <td>{{ listing.price }}</td>
+                <td>
+                  <div class="tags-cell">
+                    @for (tag of listing.tags ?? []; track tag) {
+                      <span class="tag-badge">{{ tag }}</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span [class]="getStatusClass(listing.status)">
+                    {{ listing.status | titlecase }}
+                  </span>
+                </td>
+                <td>
+                  <div class="actions-cell">
+                    <button
+                      class="action-btn action-btn--toggle"
+                      (click)="onToggleStatus(listing)"
+                      type="button"
+                      title="Toggle Status"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/>
+                        <line x1="12" y1="2" x2="12" y2="12"/>
+                      </svg>
+                    </button>
+                    <button
+                      class="action-btn action-btn--delete"
+                      (click)="onDelete(listing._id!)"
+                      type="button"
+                      title="Delete"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6"/><path d="M14 11v6"/>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="page-btn" (click)="onPageChange(currentPage() - 1)" [disabled]="currentPage() === 1" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        @for (page of getPages(); track page) {
+          <button
+            class="page-btn"
+            [class.page-btn--active]="page === currentPage()"
+            (click)="onPageChange(page)"
+            type="button"
+          >{{ page }}</button>
+        }
+        <button class="page-btn" (click)="onPageChange(currentPage() + 1)" [disabled]="currentPage() === totalPages()" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    }
+  </div>
+</div>

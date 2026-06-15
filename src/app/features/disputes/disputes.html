@@ -1,1 +1,181 @@
-<p>disputes works!</p>
+<div class="page-wrapper" [class.has-panel]="showPanel()">
+
+  <!-- ── Left: main content ── -->
+  <div class="main-col">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dispute Resolution</h1>
+        <p class="page-subtitle">Review and resolve disputed bookings</p>
+      </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="table-card">
+
+      @if (isLoading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading disputes...</p>
+        </div>
+      }
+
+      @if (!isLoading() && disputes().length === 0) {
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+               stroke="#d1d5db" stroke-width="1.5">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0
+                     0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <p>No disputed bookings</p>
+        </div>
+      }
+
+      @if (!isLoading() && disputes().length > 0) {
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Provider ID</th>
+                <th>Receiver ID</th>
+                <th>Amount (TC)</th>
+                <th>Session Sec</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (dispute of disputes(); track dispute._id) {
+                <tr [class.row--selected]="selectedDispute()?._id === dispute._id">
+                  <td class="td-id">#{{ dispute._id }}</td>
+                  <td class="td-ref">#{{ dispute.provider }}</td>
+                  <td class="td-ref">#{{ dispute.requester }}</td>
+                  <td>{{ dispute.creditsAmount }} TC</td>
+                  <td>{{ dispute.scheduledAt ?? '-' }}</td>
+                  <td>
+                    <span class="badge badge--disputed">Disputed</span>
+                  </td>
+                  <td>
+                    <button
+                      class="btn-resolve"
+                      (click)="openResolvePanel(dispute)"
+                      type="button">
+                      Resolve
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button class="page-btn"
+                    (click)="onPageChange(currentPage() - 1)"
+                    [disabled]="currentPage() === 1"
+                    type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            @for (page of getPages(); track page) {
+              <button
+                class="page-btn"
+                [class.page-btn--active]="page === currentPage()"
+                (click)="onPageChange(page)"
+                type="button">
+                {{ page }}
+              </button>
+            }
+            <button class="page-btn"
+                    (click)="onPageChange(currentPage() + 1)"
+                    [disabled]="currentPage() === totalPages()"
+                    type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- ── Right: Resolve Panel ── -->
+  @if (showPanel() && selectedDispute()) {
+    <div class="resolve-panel">
+
+      <div class="panel-header">
+        <h2 class="panel-title">Resolve Dispute</h2>
+        <button class="panel-close" (click)="closePanel()" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="panel-booking-id">
+        Booking ID: <strong>#{{ selectedDispute()?._id }}</strong>
+      </p>
+
+      <div class="panel-section">
+        <p class="panel-label">Choose a resolution</p>
+        <div class="resolution-list">
+          @for (opt of resolutions; track opt.value) {
+            <label class="resolution-option"
+                   [class.resolution-option--active]="resolution() === opt.value">
+              <input
+                type="radio"
+                name="resolution"
+                [value]="opt.value"
+                [checked]="resolution() === opt.value"
+                (change)="setResolution(opt.value)"
+              />
+              <span class="resolution-radio"></span>
+              <span class="resolution-label">{{ opt.label }}</span>
+            </label>
+          }
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <label class="panel-label" for="reason">Reason for decision</label>
+        <textarea
+          id="reason"
+          class="panel-textarea"
+          placeholder="Enter reason for this decision..."
+          [value]="reason()"
+          (input)="setReason($any($event.target).value)"
+          rows="4"
+        ></textarea>
+      </div>
+
+      <div class="panel-footer">
+        <button class="btn btn--ghost" (click)="closePanel()" type="button">
+          Cancel
+        </button>
+        <button
+          class="btn btn--primary"
+          (click)="onConfirmResolve()"
+          [disabled]="resolveLoading() || !reason().trim()"
+          type="button">
+          @if (resolveLoading()) {
+            <span class="btn-spinner"></span>
+          }
+          Confirm
+        </button>
+      </div>
+
+    </div>
+  }
+
+</div>

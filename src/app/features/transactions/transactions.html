@@ -1,1 +1,125 @@
-<p>transactions works!</p>
+<div class="page-wrapper">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Credit Ledger</h1>
+      <p class="page-subtitle">View all credit transactions across the platform</p>
+    </div>
+    <div class="header-right">
+      <select
+        class="select-input"
+        [value]="selectedType()"
+        (change)="onTypeChange($any($event.target).value)">
+        @for (type of types; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
+      <div class="total-card">
+        <div class="total-card__inner">
+          <div>
+            <p class="total-label">Total Transactions</p>
+            <p class="total-value">{{ totalCount() | number }}</p>
+          </div>
+          <div class="total-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading transactions...</p>
+      </div>
+    }
+
+    @if (!isLoading() && transactions().length === 0) {
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+             stroke="#d1d5db" stroke-width="1.5">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+        <p>No transactions found</p>
+      </div>
+    }
+
+    @if (!isLoading() && transactions().length > 0) {
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Amount (TC)</th>
+              <th>Type</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tx of transactions(); track tx._id) {
+              <tr>
+                <td class="td-id">{{ tx._id }}</td>
+                <td class="td-ref">#{{ tx.sender }}</td>
+                <td class="td-ref">#{{ tx.receiver }}</td>
+                <td>
+                  <span [class]="getAmountClass(tx.amount)">
+                    {{ formatAmount(tx.amount) }}
+                  </span>
+                </td>
+                <td>
+                  <span [class]="getTypeClass(tx.type)">
+                    {{ tx.type }}
+                  </span>
+                </td>
+                <td class="td-date">{{ tx.createdAt ?? '-' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button class="page-btn"
+                  (click)="onPageChange(currentPage() - 1)"
+                  [disabled]="currentPage() === 1"
+                  type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          @for (page of getPages(); track page) {
+            <button
+              class="page-btn"
+              [class.page-btn--active]="page === currentPage()"
+              (click)="onPageChange(page)"
+              type="button">
+              {{ page }}
+            </button>
+          }
+          <button class="page-btn"
+                  (click)="onPageChange(currentPage() + 1)"
+                  [disabled]="currentPage() === totalPages()"
+                  type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>
