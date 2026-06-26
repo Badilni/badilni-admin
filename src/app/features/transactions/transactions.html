@@ -32,6 +32,23 @@
     </div>
   </div>
 
+  <!-- Search -->
+  <div class="filters-bar">
+    <div class="search-input-wrapper">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by ID, sender, or receiver..."
+        [value]="searchKeyword()"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </div>
+  </div>
+
   <!-- Table Card -->
   <div class="table-card">
 
@@ -64,6 +81,7 @@
               <th>Amount (TC)</th>
               <th>Type</th>
               <th>Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -83,6 +101,14 @@
                   </span>
                 </td>
                 <td class="td-date">{{ tx.createdAt }}</td>
+                <td>
+                  <button class="action-btn action-btn--view" (click)="openViewModal(tx)" type="button" title="View">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                </td>
               </tr>
             }
           </tbody>
@@ -123,3 +149,58 @@
     }
   </div>
 </div>
+
+<!-- View Modal -->
+@if (showViewModal() && selectedTransaction()) {
+  <div class="modal-overlay" (click)="closeViewModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Transaction Details</h2>
+        <button class="modal-close" (click)="closeViewModal()" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Transaction ID</span>
+            <span class="detail-value">{{ selectedTransaction()?._id }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Type</span>
+            <span [class]="getTypeClass(selectedTransaction()?.type ?? '')">
+              {{ selectedTransaction()?.type }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Sender</span>
+            <span class="detail-value">#{{ selectedTransaction()?.sender }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Receiver</span>
+            <span class="detail-value">#{{ selectedTransaction()?.receiver }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Amount</span>
+            <span [class]="getAmountClass(selectedTransaction()?.type ?? '')">
+              {{ formatAmount(selectedTransaction()?.amount ?? 0, selectedTransaction()?.type ?? '') }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Status</span>
+            <span class="detail-value">{{ selectedTransaction()?.status ?? '—' }}</span>
+          </div>
+          <div class="detail-item detail-item--full">
+            <span class="detail-label">Date</span>
+            <span class="detail-value">{{ selectedTransaction()?.createdAt }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--ghost" (click)="closeViewModal()" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+}

@@ -111,10 +111,12 @@ describe('Notifications Component', () => {
     expect(component.formMessage()).toBe('');
   }));
 
-  it('should cancel and reset form on onCancel()', () => {
+  it('should cancel and reset form on closeSendModal()', () => {
     component.formTitle.set('Test');
-    component.onCancel();
+    component.showSendModal.set(true);
+    component.closeSendModal();
     expect(component.formTitle()).toBe('');
+    expect(component.showSendModal()).toBeFalse();
   });
 
   it('should return correct type badge classes', () => {

@@ -3,6 +3,7 @@ import { DecimalPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Users as UsersService, UsersQueryParams } from '../../core/services/users';
 import { User } from '../../core/models/user';
+import { matchesKeyword, paginateItems } from '../../shared/utils/mock-data';
 
 @Component({
   selector: 'app-users',
@@ -23,7 +24,30 @@ export class Users implements OnInit {
   totalCount = signal(0);
   limit = 10;
 
+  usingMock = signal(false);
+  private readonly mockUsers: User[] = [
+    { _id: 'USR-2311', name: 'Ahmed Samir', email: 'ahmed@example.com', role: 'user', walletBalance: 1250, totalSessionsCompleted: 24, status: 'active', isVerified: true },
+    { _id: 'USR-1456', name: 'Sara Ali', email: 'sara@example.com', role: 'user', walletBalance: 3210, totalSessionsCompleted: 56, status: 'active', isVerified: true },
+    { _id: 'USR-3322', name: 'Mohamed Hassan', email: 'mohamed@example.com', role: 'user', walletBalance: 320, totalSessionsCompleted: 8, status: 'suspended', isVerified: true },
+    { _id: 'USR-7768', name: 'Omar Khaled', email: 'omar@example.com', role: 'user', walletBalance: 1040, totalSessionsCompleted: 102, status: 'active', isVerified: true },
+    { _id: 'USR-8899', name: 'Nouran Magdy', email: 'nouran@example.com', role: 'user', walletBalance: 980, totalSessionsCompleted: 19, status: 'active', isVerified: true },
+    { _id: 'USR-9901', name: 'Admin User', email: 'admin@badilni.com', role: 'admin', walletBalance: 0, totalSessionsCompleted: 0, status: 'active', isVerified: true },
+  ];
+
+  showViewModal = signal(false);
+  showEditModal = signal(false);
+  isEditMode = signal(false);
+  modalLoading = signal(false);
+  selectedUser = signal<User | null>(null);
+  formData = signal<Partial<User>>({
+    name: '',
+    email: '',
+    role: 'user',
+    status: 'active',
+  });
+
   roles = ['All Roles', 'user', 'admin'];
+  statusOptions: User['status'][] = ['active', 'suspended', 'inactive'];
 
   constructor(private usersService: UsersService) {}
 
@@ -32,6 +56,11 @@ export class Users implements OnInit {
   }
 
   loadUsers(): void {
+    if (this.usingMock()) {
+      this.applyMockFilter();
+      return;
+    }
+
     this.isLoading.set(true);
     const params: UsersQueryParams = {
       page: this.currentPage(),
@@ -50,19 +79,39 @@ export class Users implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        // ⚠️ Mock data – replace when backend /users is ready
-        this.users.set([
-          { _id: 'USR-2311', name: 'Ahmed Samir',   email: 'ahmed@example.com',   role: 'user',  walletBalance: 1250, totalSessionsCompleted: 24,  status: 'active',    isVerified: true },
-          { _id: 'USR-1456', name: 'Sara Ali',      email: 'sara@example.com',    role: 'user',  walletBalance: 3210, totalSessionsCompleted: 56,  status: 'active',    isVerified: true },
-          { _id: 'USR-3322', name: 'Mohamed Hassan', email: 'mohamed@example.com', role: 'user',  walletBalance: 320,  totalSessionsCompleted: 8,   status: 'suspended', isVerified: true },
-          { _id: 'USR-7768', name: 'Omar Khaled',   email: 'omar@example.com',    role: 'user',  walletBalance: 1040, totalSessionsCompleted: 102, status: 'active',    isVerified: true },
-          { _id: 'USR-8899', name: 'Nouran Magdy',  email: 'nouran@example.com',  role: 'user',  walletBalance: 980,  totalSessionsCompleted: 19,  status: 'active',    isVerified: true },
-        ] as User[]);
-        this.totalPages.set(5);
-        this.totalCount.set(50);
-        this.isLoading.set(false);
+        this.usingMock.set(true);
+        this.applyMockFilter();
       },
     });
+  }
+
+  private applyMockFilter(): void {
+    this.isLoading.set(true);
+
+    let filtered = [...this.mockUsers];
+
+    const keyword = this.searchKeyword();
+    if (keyword) {
+      filtered = filtered.filter((u) =>
+        matchesKeyword(keyword, [u.name, u.email]),
+      );
+    }
+
+    const role = this.selectedRole();
+    if (role && role !== 'All Roles') {
+      filtered = filtered.filter((u) => u.role === role);
+    }
+
+    const { data, totalCount, totalPages } = paginateItems(
+      filtered,
+      this.currentPage(),
+      this.limit,
+    );
+
+    this.users.set(data);
+    this.totalCount.set(totalCount);
+    this.totalPages.set(totalPages);
+    this.isLoading.set(false);
   }
 
   onSearch(value: string): void {
@@ -84,24 +133,118 @@ export class Users implements OnInit {
   }
 
   onExport(): void {
-    // ⚠️ BACKEND NOT READY: export endpoint not yet implemented
-    console.warn('Export endpoint not yet implemented');
+    const data = this.usingMock() ? this.mockUsers : this.users();
+    const csv = [
+      'ID,Name,Email,Role,Status,Credits,Sessions',
+      ...data.map(
+        (u) =>
+          `${u._id},${u.name},${u.email},${u.role},${u.status ?? ''},${u.walletBalance ?? 0},${u.totalSessionsCompleted ?? 0}`,
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users-export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
-  onView(userId: string): void {
-    console.log('View user:', userId);
+  openCreateModal(): void {
+    this.isEditMode.set(false);
+    this.formData.set({ name: '', email: '', role: 'user', status: 'active' });
+    this.showEditModal.set(true);
   }
 
-  onEdit(userId: string): void {
-    console.log('Edit user:', userId);
+  onView(user: User): void {
+    this.selectedUser.set(user);
+    this.showViewModal.set(true);
+  }
+
+  onEdit(user: User): void {
+    this.isEditMode.set(true);
+    this.formData.set({ ...user });
+    this.showEditModal.set(true);
+  }
+
+  closeViewModal(): void {
+    this.showViewModal.set(false);
+    this.selectedUser.set(null);
+  }
+
+  closeEditModal(): void {
+    this.showEditModal.set(false);
+  }
+
+  onSave(): void {
+    const data = this.formData();
+    if (!data.name?.trim() || !data.email?.trim()) return;
+
+    this.modalLoading.set(true);
+
+    if (this.isEditMode() && data._id) {
+      this.usersService.update(data._id, data).subscribe({
+        next: () => {
+          this.modalLoading.set(false);
+          this.closeEditModal();
+          this.loadUsers();
+        },
+        error: () => {
+          if (this.usingMock()) {
+            const idx = this.mockUsers.findIndex((u) => u._id === data._id);
+            if (idx >= 0) {
+              this.mockUsers[idx] = { ...this.mockUsers[idx], ...data } as User;
+            }
+            this.modalLoading.set(false);
+            this.closeEditModal();
+            this.applyMockFilter();
+          } else {
+            this.modalLoading.set(false);
+          }
+        },
+      });
+    } else {
+      const newUser: User = {
+        _id: `USR-${Date.now()}`,
+        name: data.name!,
+        email: data.email!,
+        role: data.role ?? 'user',
+        status: data.status ?? 'active',
+        isVerified: false,
+        walletBalance: 0,
+        totalSessionsCompleted: 0,
+      };
+
+      if (this.usingMock()) {
+        this.mockUsers.unshift(newUser);
+        this.modalLoading.set(false);
+        this.closeEditModal();
+        this.applyMockFilter();
+      } else {
+        this.modalLoading.set(false);
+        this.closeEditModal();
+        this.loadUsers();
+      }
+    }
   }
 
   onDelete(userId: string): void {
     if (!confirm('Are you sure you want to delete this user?')) return;
     this.usersService.delete(userId).subscribe({
       next: () => this.loadUsers(),
-      error: (err) => console.error('Delete failed', err),
+      error: () => {
+        if (this.usingMock()) {
+          const idx = this.mockUsers.findIndex((u) => u._id === userId);
+          if (idx >= 0) this.mockUsers.splice(idx, 1);
+          this.applyMockFilter();
+        }
+      },
     });
+  }
+
+  updateForm(field: keyof User, value: string | number | boolean): void {
+    this.formData.update((prev) => ({ ...prev, [field]: value }));
   }
 
   getPages(): number[] {

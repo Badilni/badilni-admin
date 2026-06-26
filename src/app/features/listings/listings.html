@@ -5,7 +5,7 @@
       <h1 class="page-title">Skill Listings</h1>
       <p class="page-subtitle">Manage all skill listings on the platform</p>
     </div>
-    <button class="btn btn--primary" (click)="onNewListing()" type="button">
+    <button class="btn btn--primary" (click)="openCreateModal()" type="button">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
@@ -87,23 +87,25 @@
                 </td>
                 <td>
                   <div class="actions-cell">
-                    <button
-                      class="action-btn action-btn--toggle"
-                      (click)="onToggleStatus(listing)"
-                      type="button"
-                      title="Toggle Status"
-                    >
+                    <button class="action-btn action-btn--view" (click)="openViewModal(listing)" type="button" title="View">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </button>
+                    <button class="action-btn action-btn--edit" (click)="openEditModal(listing)" type="button" title="Edit">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button class="action-btn action-btn--toggle" (click)="onToggleStatus(listing)" type="button" title="Toggle Status">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/>
                         <line x1="12" y1="2" x2="12" y2="12"/>
                       </svg>
                     </button>
-                    <button
-                      class="action-btn action-btn--delete"
-                      (click)="onDelete(listing._id!)"
-                      type="button"
-                      title="Delete"
-                    >
+                    <button class="action-btn action-btn--delete" (click)="onDelete(listing._id!)" type="button" title="Delete">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -143,3 +145,127 @@
     }
   </div>
 </div>
+
+<!-- View Modal -->
+@if (modalMode() === 'view' && selectedListing()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Listing Details</h2>
+        <button class="modal-close" (click)="closeModal()" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Listing ID</span>
+            <span class="detail-value">{{ selectedListing()?._id }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Title</span>
+            <span class="detail-value">{{ selectedListing()?.title }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Provider</span>
+            <span class="detail-value">#{{ selectedListing()?.provider }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Price (TC)</span>
+            <span class="detail-value">{{ selectedListing()?.price }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Status</span>
+            <span [class]="getStatusClass(selectedListing()?.status ?? '')">
+              {{ selectedListing()?.status | titlecase }}
+            </span>
+          </div>
+          <div class="detail-item detail-item--full">
+            <span class="detail-label">Tags</span>
+            <div class="tags-cell">
+              @for (tag of selectedListing()?.tags ?? []; track tag) {
+                <span class="tag-badge">{{ tag }}</span>
+              }
+            </div>
+          </div>
+          @if (selectedListing()?.description) {
+            <div class="detail-item detail-item--full">
+              <span class="detail-label">Description</span>
+              <span class="detail-value">{{ selectedListing()?.description }}</span>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--ghost" (click)="closeModal()" type="button">Close</button>
+        <button class="btn btn--primary" (click)="closeModal(); openEditModal(selectedListing()!)" type="button">Edit Listing</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Create / Edit Modal -->
+@if (isFormMode()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ modalMode() === 'edit' ? 'Edit Listing' : 'New Listing' }}</h2>
+        <button class="modal-close" (click)="closeModal()" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input" type="text" placeholder="Listing title"
+            [value]="formData().title ?? ''"
+            (input)="updateForm('title', $any($event.target).value)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Provider ID</label>
+          <input class="form-input" type="text" placeholder="PRV-0000"
+            [value]="formData().provider ?? ''"
+            (input)="updateForm('provider', $any($event.target).value)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price (TC)</label>
+          <input class="form-input" type="number" placeholder="0"
+            [value]="formData().price ?? 0"
+            (input)="updateForm('price', +$any($event.target).value)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags (comma separated)</label>
+          <input class="form-input" type="text" placeholder="Design, Web"
+            [value]="tagsInput()"
+            (input)="tagsInput.set($any($event.target).value)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" [value]="formData().status ?? 'active'"
+            (change)="updateForm('status', $any($event.target).value)">
+            @for (status of statuses.slice(1); track status) {
+              <option [value]="status">{{ status | titlecase }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" placeholder="Listing description..." rows="3"
+            [value]="formData().description ?? ''"
+            (input)="updateForm('description', $any($event.target).value)"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--ghost" (click)="closeModal()" type="button">Cancel</button>
+        <button class="btn btn--primary" (click)="onSave()" [disabled]="modalLoading()" type="button">
+          @if (modalLoading()) { <span class="btn-spinner"></span> }
+          {{ modalMode() === 'edit' ? 'Update' : 'Create' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

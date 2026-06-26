@@ -16,6 +16,23 @@
     </button>
   </div>
 
+  <!-- Search -->
+  <div class="filters-bar">
+    <div class="search-input-wrapper">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by name or slug..."
+        [value]="searchKeyword()"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </div>
+  </div>
+
   <!-- Table Card -->
   <div class="table-card">
 

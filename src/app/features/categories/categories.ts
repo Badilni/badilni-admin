@@ -1,5 +1,4 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import {
@@ -7,11 +6,12 @@ import {
   CategoriesQueryParams,
 } from '../../core/services/categories';
 import { Category } from '../../core/models/category';
+import { matchesKeyword, paginateItems } from '../../shared/utils/mock-data';
 
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [FormsModule, TitleCasePipe],
+  imports: [FormsModule],
   templateUrl: './categories.html',
   styleUrl: './categories.css',
 })
@@ -19,6 +19,9 @@ export class Categories implements OnInit {
   categories = signal<Category[]>([]);
   isLoading = signal(true);
   error = signal('');
+
+  searchKeyword = signal('');
+  usingMock = signal(false);
 
   showModal = signal(false);
   isEditMode = signal(false);
@@ -37,6 +40,14 @@ export class Categories implements OnInit {
   totalCount = signal(0);
   readonly limit = 10;
 
+  private readonly mockCategories: Category[] = [
+    { _id: 'CAT-001', name: 'Design', slug: 'design', icon: '🎨', order: 1, active: true },
+    { _id: 'CAT-002', name: 'Programming', slug: 'programming', icon: '💻', order: 2, active: true },
+    { _id: 'CAT-003', name: 'Marketing', slug: 'marketing', icon: '📢', order: 3, active: true },
+    { _id: 'CAT-004', name: 'Language', slug: 'language', icon: '🌐', order: 4, active: true },
+    { _id: 'CAT-005', name: 'Business', slug: 'business', icon: '💼', order: 5, active: false },
+  ];
+
   constructor(private categoriesService: CategoriesService) {}
 
   ngOnInit(): void {
@@ -44,6 +55,11 @@ export class Categories implements OnInit {
   }
 
   loadCategories(): void {
+    if (this.usingMock()) {
+      this.applyMockFilter();
+      return;
+    }
+
     this.isLoading.set(true);
 
     const params: CategoriesQueryParams = {
@@ -59,19 +75,39 @@ export class Categories implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        // ⚠️ BACKEND NOT READY – /categories endpoint not yet implemented, using mock data
-        this.categories.set([
-          { _id: 'CAT-001', name: 'Design',      slug: 'design',      icon: '🎨', order: 1, active: true  },
-          { _id: 'CAT-002', name: 'Programming', slug: 'programming', icon: '💻', order: 2, active: true  },
-          { _id: 'CAT-003', name: 'Marketing',   slug: 'marketing',   icon: '📢', order: 3, active: true  },
-          { _id: 'CAT-004', name: 'Language',    slug: 'language',    icon: '🌐', order: 4, active: true  },
-          { _id: 'CAT-005', name: 'Business',    slug: 'business',    icon: '💼', order: 5, active: false },
-        ] as Category[]);
-        this.totalPages.set(1);
-        this.totalCount.set(5);
-        this.isLoading.set(false);
+        this.usingMock.set(true);
+        this.applyMockFilter();
       },
     });
+  }
+
+  private applyMockFilter(): void {
+    this.isLoading.set(true);
+
+    let filtered = [...this.mockCategories];
+    const keyword = this.searchKeyword();
+    if (keyword) {
+      filtered = filtered.filter((c) =>
+        matchesKeyword(keyword, [c.name, c.slug]),
+      );
+    }
+
+    const { data, totalCount, totalPages } = paginateItems(
+      filtered,
+      this.currentPage(),
+      this.limit,
+    );
+
+    this.categories.set(data);
+    this.totalCount.set(totalCount);
+    this.totalPages.set(totalPages);
+    this.isLoading.set(false);
+  }
+
+  onSearch(value: string): void {
+    this.searchKeyword.set(value);
+    this.currentPage.set(1);
+    this.loadCategories();
   }
 
   openCreateModal(): void {
@@ -97,12 +133,39 @@ export class Categories implements OnInit {
     if (this.isEditMode() && data._id) {
       this.categoriesService.update(data._id, data).subscribe({
         next: () => { this.modalLoading.set(false); this.closeModal(); this.loadCategories(); },
-        error: (err) => { console.error('Update failed', err); this.modalLoading.set(false); },
+        error: () => {
+          if (this.usingMock()) {
+            const idx = this.mockCategories.findIndex((c) => c._id === data._id);
+            if (idx >= 0) this.mockCategories[idx] = { ...this.mockCategories[idx], ...data } as Category;
+            this.modalLoading.set(false);
+            this.closeModal();
+            this.applyMockFilter();
+          } else {
+            this.modalLoading.set(false);
+          }
+        },
       });
     } else {
       this.categoriesService.create(data).subscribe({
         next: () => { this.modalLoading.set(false); this.closeModal(); this.loadCategories(); },
-        error: (err) => { console.error('Create failed', err); this.modalLoading.set(false); },
+        error: () => {
+          if (this.usingMock()) {
+            const newCat: Category = {
+              _id: `CAT-${Date.now()}`,
+              name: data.name!,
+              slug: data.slug ?? data.name!.toLowerCase().replace(/\s+/g, '-'),
+              icon: data.icon ?? '📁',
+              order: data.order ?? 0,
+              active: data.active ?? true,
+            };
+            this.mockCategories.push(newCat);
+            this.modalLoading.set(false);
+            this.closeModal();
+            this.applyMockFilter();
+          } else {
+            this.modalLoading.set(false);
+          }
+        },
       });
     }
   }
@@ -111,7 +174,13 @@ export class Categories implements OnInit {
     if (!confirm('Are you sure you want to delete this category?')) return;
     this.categoriesService.delete(id).subscribe({
       next: () => this.loadCategories(),
-      error: (err) => console.error('Delete failed', err),
+      error: () => {
+        if (this.usingMock()) {
+          const idx = this.mockCategories.findIndex((c) => c._id === id);
+          if (idx >= 0) this.mockCategories.splice(idx, 1);
+          this.applyMockFilter();
+        }
+      },
     });
   }
 

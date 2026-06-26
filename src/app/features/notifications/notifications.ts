@@ -21,8 +21,13 @@ export class Notifications implements OnInit {
   sendLoading = signal(false);
 
   selectedType = signal('');
+  searchKeyword = signal('');
+  usingMock = signal(false);
 
-  // Send form state
+  showSendModal = signal(false);
+  showViewModal = signal(false);
+  selectedNotification = signal<Notification | null>(null);
+
   formType = signal<SendNotificationPayload['type']>('system');
   formTarget = signal<SendNotificationPayload['target']>('broadcast');
   formUserId = signal('');
@@ -30,11 +35,19 @@ export class Notifications implements OnInit {
   formMessage = signal('');
   formError = signal('');
 
+  private readonly mockNotifications: Notification[] = [
+    { _id: 'N001', title: 'System Update', message: 'Scheduled maintenance on May 25...', type: 'system', target: 'broadcast' },
+    { _id: 'N002', title: 'Payment Reminder', message: "Don't forget to complete your payment...", type: 'warning', target: 'user' },
+    { _id: 'N003', title: 'Welcome Bonus', message: 'You have received 30 TC as welcome bonus', type: 'info', target: 'broadcast' },
+    { _id: 'N004', title: 'Policy Update', message: 'New terms and conditions are now active.', type: 'system', target: 'broadcast' },
+    { _id: 'N005', title: 'Session Completed', message: 'Your session has been marked as complete.', type: 'success', target: 'user' },
+  ];
+
   readonly types = ['All Types', 'system', 'warning', 'info', 'success'];
   readonly notifTypes: { value: SendNotificationPayload['type']; label: string }[] = [
-    { value: 'system',  label: 'System'  },
+    { value: 'system', label: 'System' },
     { value: 'warning', label: 'Warning' },
-    { value: 'info',    label: 'Info'    },
+    { value: 'info', label: 'Info' },
     { value: 'success', label: 'Success' },
   ];
 
@@ -45,6 +58,11 @@ export class Notifications implements OnInit {
   }
 
   loadNotifications(): void {
+    if (this.usingMock()) {
+      this.applyMockFilter();
+      return;
+    }
+
     this.isLoading.set(true);
 
     const params: Record<string, unknown> = {};
@@ -58,21 +76,63 @@ export class Notifications implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        // ⚠️ BACKEND NOT READY – /notifications admin endpoint not yet implemented
-        this.notifications.set([
-          { _id: 'N001', title: 'System Update',     message: 'Scheduled maintenance on May 25...', type: 'system',  target: 'broadcast' },
-          { _id: 'N002', title: 'Payment Reminder',  message: "Don't forget to complete your payment...", type: 'warning', target: 'user' },
-          { _id: 'N003', title: 'Welcome Bonus',     message: 'You have received 30 TC as welcome bonus', type: 'info',    target: 'broadcast' },
-          { _id: 'N004', title: 'Policy Update',     message: 'New terms and conditions are now active.', type: 'system',  target: 'broadcast' },
-        ] as Notification[]);
-        this.isLoading.set(false);
+        this.usingMock.set(true);
+        this.applyMockFilter();
       },
     });
+  }
+
+  private applyMockFilter(): void {
+    this.isLoading.set(true);
+
+    let filtered = [...this.mockNotifications];
+
+    const keyword = this.searchKeyword().trim().toLowerCase();
+    if (keyword) {
+      filtered = filtered.filter(
+        (n) =>
+          n.title.toLowerCase().includes(keyword) ||
+          n.message.toLowerCase().includes(keyword),
+      );
+    }
+
+    const type = this.selectedType();
+    if (type && type !== 'All Types') {
+      filtered = filtered.filter((n) => n.type === type);
+    }
+
+    this.notifications.set(filtered);
+    this.isLoading.set(false);
+  }
+
+  onSearch(value: string): void {
+    this.searchKeyword.set(value);
+    this.loadNotifications();
   }
 
   onTypeFilterChange(type: string): void {
     this.selectedType.set(type);
     this.loadNotifications();
+  }
+
+  openSendModal(): void {
+    this.resetForm();
+    this.showSendModal.set(true);
+  }
+
+  closeSendModal(): void {
+    this.showSendModal.set(false);
+    this.resetForm();
+  }
+
+  openViewModal(notif: Notification): void {
+    this.selectedNotification.set(notif);
+    this.showViewModal.set(true);
+  }
+
+  closeViewModal(): void {
+    this.showViewModal.set(false);
+    this.selectedNotification.set(null);
   }
 
   onSend(): void {
@@ -89,10 +149,10 @@ export class Notifications implements OnInit {
     }
 
     const payload: SendNotificationPayload = {
-      title:   this.formTitle(),
+      title: this.formTitle(),
       message: this.formMessage(),
-      type:    this.formType(),
-      target:  this.formTarget(),
+      type: this.formType(),
+      target: this.formTarget(),
     };
 
     if (this.formTarget() === 'user') {
@@ -104,25 +164,40 @@ export class Notifications implements OnInit {
     this.notificationsService.send(payload).subscribe({
       next: () => {
         this.sendLoading.set(false);
-        this.resetForm();
+        this.closeSendModal();
         this.loadNotifications();
       },
-      error: (err) => {
-        console.error('Send failed', err);
-        this.formError.set('Failed to send notification. Please try again.');
-        this.sendLoading.set(false);
+      error: () => {
+        if (this.usingMock()) {
+          const newNotif: Notification = {
+            _id: `N${Date.now()}`,
+            title: payload.title,
+            message: payload.message,
+            type: payload.type,
+            target: payload.target,
+          };
+          this.mockNotifications.unshift(newNotif);
+          this.sendLoading.set(false);
+          this.closeSendModal();
+          this.applyMockFilter();
+        } else {
+          this.formError.set('Failed to send notification. Please try again.');
+          this.sendLoading.set(false);
+        }
       },
     });
-  }
-
-  onCancel(): void {
-    this.resetForm();
   }
 
   onDelete(id: string): void {
     this.notificationsService.delete(id).subscribe({
       next: () => this.loadNotifications(),
-      error: (err) => console.error('Delete failed', err),
+      error: () => {
+        if (this.usingMock()) {
+          const idx = this.mockNotifications.findIndex((n) => n._id === id);
+          if (idx >= 0) this.mockNotifications.splice(idx, 1);
+          this.applyMockFilter();
+        }
+      },
     });
   }
 
@@ -137,9 +212,9 @@ export class Notifications implements OnInit {
 
   getTypeClass(type: string): string {
     const map: Record<string, string> = {
-      system:  'type-badge type-badge--gray',
+      system: 'type-badge type-badge--gray',
       warning: 'type-badge type-badge--yellow',
-      info:    'type-badge type-badge--blue',
+      info: 'type-badge type-badge--blue',
       success: 'type-badge type-badge--green',
     };
     return map[type] ?? 'type-badge';
@@ -153,9 +228,9 @@ export class Notifications implements OnInit {
 
   getNotifIcon(type: string): string {
     const map: Record<string, string> = {
-      system:  '🔔',
+      system: '🔔',
       warning: '⚠️',
-      info:    '💬',
+      info: '💬',
       success: '✅',
     };
     return map[type] ?? '🔔';
