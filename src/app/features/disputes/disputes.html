@@ -41,9 +41,9 @@
               <tr>
                 <th>Booking ID</th>
                 <th>Provider ID</th>
-                <th>Receiver ID</th>
+                <th>Requester ID</th>
                 <th>Amount (TC)</th>
-                <th>Session Sec</th>
+                <th>Date</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -55,7 +55,7 @@
                   <td class="td-ref">#{{ dispute.provider }}</td>
                   <td class="td-ref">#{{ dispute.requester }}</td>
                   <td>{{ dispute.creditsAmount }} TC</td>
-                  <td>{{ dispute.scheduledAt ?? '-' }}</td>
+                  <td>{{ dispute.createdAt }}</td>
                   <td>
                     <span class="badge badge--disputed">Disputed</span>
                   </td>

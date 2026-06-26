@@ -7,7 +7,7 @@ import { Category } from '../../core/models/category';
 
 const mockCategory: Category = {
   _id: 'CAT-001', name: 'Design', slug: 'design',
-  icon: '🎨', order: 1, status: 'active',
+  icon: '🎨', order: 1, active: true,
 };
 
 const mockResponse = {
@@ -107,8 +107,13 @@ describe('Categories Component', () => {
   }));
 
   it('should return correct status classes', () => {
-    expect(component.getStatusClass('active')).toContain('badge--active');
-    expect(component.getStatusClass('inactive')).toContain('badge--inactive');
+    expect(component.getStatusClass(true)).toContain('badge--active');
+    expect(component.getStatusClass(false)).toContain('badge--inactive');
+  });
+
+  it('should return correct status labels', () => {
+    expect(component.getStatusLabel(true)).toBe('Active');
+    expect(component.getStatusLabel(false)).toBe('Inactive');
   });
 
   it('should update form field correctly', () => {

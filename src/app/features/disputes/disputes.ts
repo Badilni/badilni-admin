@@ -56,12 +56,12 @@ export class Disputes implements OnInit {
         error: () => {
           // ⚠️ BACKEND NOT READY – /disputes endpoint not yet implemented
           this.disputes.set([
-            { _id: 'BK5-7P3A', provider: 'PRV-1045', receiver: 'USR-2311', amount: 150, sessionSec: 0, status: 'disputed', date: '2025-05-31' },
-            { _id: 'BKI-Q290', provider: 'PRV-987',  receiver: 'USR-1456', amount: 200, sessionSec: 0, status: 'disputed', date: '2025-05-13' },
-            { _id: 'BK8-B418', provider: 'PRV-555',  receiver: 'USR-3322', amount: 150, sessionSec: 0, status: 'disputed', date: '2025-05-13' },
-            { _id: 'BK9-4D5E', provider: 'PRV-322',  receiver: 'USR-7768', amount: 250, sessionSec: 0, status: 'disputed', date: '2025-05-13' },
-            { _id: 'BK0-9F8C', provider: 'PRV-333',  receiver: 'USR-8899', amount: 180, sessionSec: 0, status: 'disputed', date: '2025-05-13' },
-          ] as unknown as Booking[]);
+            { _id: 'BK5-7P3A', provider: 'PRV-1045', requester: 'USR-2311', listing: 'LST-001', creditsAmount: 150, status: 'disputed', createdAt: '2025-05-31' },
+            { _id: 'BKI-Q290', provider: 'PRV-987',  requester: 'USR-1456', listing: 'LST-002', creditsAmount: 200, status: 'disputed', createdAt: '2025-05-13' },
+            { _id: 'BK8-B418', provider: 'PRV-555',  requester: 'USR-3322', listing: 'LST-003', creditsAmount: 150, status: 'disputed', createdAt: '2025-05-13' },
+            { _id: 'BK9-4D5E', provider: 'PRV-322',  requester: 'USR-7768', listing: 'LST-004', creditsAmount: 250, status: 'disputed', createdAt: '2025-05-13' },
+            { _id: 'BK0-9F8C', provider: 'PRV-333',  requester: 'USR-8899', listing: 'LST-005', creditsAmount: 180, status: 'disputed', createdAt: '2025-05-13' },
+          ] as Booking[]);
           this.totalPages.set(1);
           this.isLoading.set(false);
         },

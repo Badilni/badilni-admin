@@ -5,14 +5,14 @@ import { AuditLog } from './audit-log';
 import { AuditLog as AuditLogService } from '../../core/services/audit-log';
 import { AdminAction } from '../../core/models/admin-action';
 
-const mockLog = {
+const mockLog: AdminAction = {
   _id: 'LOG-001',
   admin: 'ADM-001',
   targetId: 'USR-2311',
   action: 'suspend',
-  details: 'Violation of terms',
+  details: { reason: 'Violation of terms' },
   createdAt: 'May 20, 2025 14:30',
-} as unknown as AdminAction;
+};
 
 const mockResponse = {
   status: 'success',
@@ -147,11 +147,31 @@ describe('AuditLog Component', () => {
     expect(component.formatTargetId('USR-2311')).toBe('#USR-2311');
   });
 
+  it('should return dash when targetId is undefined', () => {
+    expect(component.formatTargetId(undefined)).toBe('—');
+  });
+
   it('should use correct field name admin in mock log', () => {
-    expect((mockLog as any).admin).toBe('ADM-001');
+    expect(mockLog.admin).toBe('ADM-001');
   });
 
   it('should use correct field name targetId in mock log', () => {
-    expect((mockLog as any).targetId).toBe('USR-2311');
+    expect(mockLog.targetId).toBe('USR-2311');
+  });
+
+  it('should extract reason from details object via formatDetails', () => {
+    expect(component.formatDetails({ reason: 'Violation of terms' })).toBe('Violation of terms');
+  });
+
+  it('should return dash from formatDetails when details is undefined', () => {
+    expect(component.formatDetails(undefined)).toBe('—');
+  });
+
+  it('should join values from formatDetails when no reason key exists', () => {
+    expect(component.formatDetails({ note: 'Some note', amount: 50 })).toBe('Some note, 50');
+  });
+
+  it('should return dash from formatDetails when details is an empty object', () => {
+    expect(component.formatDetails({})).toBe('—');
   });
 });

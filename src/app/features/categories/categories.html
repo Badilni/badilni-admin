@@ -60,8 +60,8 @@
                 <td class="td-slug">{{ cat.slug }}</td>
                 <td>{{ cat.order }}</td>
                 <td>
-                  <span [class]="getStatusClass(cat.status ?? 'inactive')">
-                    {{ cat.status | titlecase }}
+                  <span [class]="getStatusClass(cat.active)">
+                    {{ getStatusLabel(cat.active) }}
                   </span>
                 </td>
                 <td>
@@ -211,10 +211,10 @@
           <label class="form-label">Status</label>
           <select
             class="form-select"
-            [value]="formData().status ?? 'active'"
-            (change)="updateForm('status', $any($event.target).value)">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            [value]="formData().active ?? true"
+            (change)="updateForm('active', $any($event.target).value === 'true')">
+            <option [value]="true">Active</option>
+            <option [value]="false">Inactive</option>
           </select>
         </div>
       </div>

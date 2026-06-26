@@ -79,10 +79,10 @@
                 <td>
                   <span class="role-badge">{{ getRoleLabel(user.role) }}</span>
                 </td>
-                <td>{{ user.credits ?? 0 | number }}</td>
-                <td>{{ user.sessions ?? 0 }}</td>
+                <td>{{ user.walletBalance ?? 0 | number }}</td>
+                <td>{{ user.totalSessionsCompleted ?? 0 }}</td>
                 <td>
-                  <span [class]="getStatusClass(user.status ?? 'inactive')">
+                  <span [class]="getStatusClass(user.status)">
                     {{ user.status | titlecase }}
                   </span>
                 </td>

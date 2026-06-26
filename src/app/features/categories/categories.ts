@@ -29,7 +29,7 @@ export class Categories implements OnInit {
     slug: '',
     icon: '',
     order: 0,
-    status: 'active',
+    active: true,
   });
 
   currentPage = signal(1);
@@ -61,11 +61,11 @@ export class Categories implements OnInit {
       error: () => {
         // ⚠️ BACKEND NOT READY – /categories endpoint not yet implemented, using mock data
         this.categories.set([
-          { _id: 'CAT-001', name: 'Design',      slug: 'design',      icon: '🎨', order: 1, status: 'active'   },
-          { _id: 'CAT-002', name: 'Programming', slug: 'programming', icon: '💻', order: 2, status: 'active'   },
-          { _id: 'CAT-003', name: 'Marketing',   slug: 'marketing',   icon: '📢', order: 3, status: 'active'   },
-          { _id: 'CAT-004', name: 'Language',    slug: 'language',    icon: '🌐', order: 4, status: 'active'   },
-          { _id: 'CAT-005', name: 'Business',    slug: 'business',    icon: '💼', order: 5, status: 'inactive' },
+          { _id: 'CAT-001', name: 'Design',      slug: 'design',      icon: '🎨', order: 1, active: true  },
+          { _id: 'CAT-002', name: 'Programming', slug: 'programming', icon: '💻', order: 2, active: true  },
+          { _id: 'CAT-003', name: 'Marketing',   slug: 'marketing',   icon: '📢', order: 3, active: true  },
+          { _id: 'CAT-004', name: 'Language',    slug: 'language',    icon: '🌐', order: 4, active: true  },
+          { _id: 'CAT-005', name: 'Business',    slug: 'business',    icon: '💼', order: 5, active: false },
         ] as Category[]);
         this.totalPages.set(1);
         this.totalCount.set(5);
@@ -76,7 +76,7 @@ export class Categories implements OnInit {
 
   openCreateModal(): void {
     this.isEditMode.set(false);
-    this.formData.set({ name: '', slug: '', icon: '', order: 0, status: 'active' });
+    this.formData.set({ name: '', slug: '', icon: '', order: 0, active: true });
     this.showModal.set(true);
   }
 
@@ -121,7 +121,7 @@ export class Categories implements OnInit {
     this.loadCategories();
   }
 
-  updateForm(field: keyof Category, value: string | number): void {
+  updateForm(field: keyof Category, value: string | number | boolean): void {
     this.formData.update((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -129,11 +129,11 @@ export class Categories implements OnInit {
     return Array.from({ length: this.totalPages() }, (_, i) => i + 1);
   }
 
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      active:   'badge badge--active',
-      inactive: 'badge badge--inactive',
-    };
-    return map[status] ?? 'badge';
+  getStatusClass(active: boolean | undefined): string {
+    return active ? 'badge badge--active' : 'badge badge--inactive';
+  }
+
+  getStatusLabel(active: boolean | undefined): string {
+    return active ? 'Active' : 'Inactive';
   }
 }

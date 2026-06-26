@@ -2,18 +2,16 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'user' | 'provider' | 'admin';
+  role: 'user' | 'admin';
   photo?: string;
   bio?: string;
   isVerified: boolean;
+  status?: 'active' | 'suspended' | 'inactive';
   skillTags?: string[];
   walletBalance?: number;
   creditsInEscrow?: number;
   totalSessionsCompleted?: number;
   averageRating?: number;
-  credits?: number;
-  sessions?: number;
-  status?: 'active' | 'inactive' | 'suspended';
   createdAt?: string;
   updatedAt?: string;
 }

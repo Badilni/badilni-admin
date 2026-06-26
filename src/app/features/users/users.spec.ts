@@ -8,8 +8,8 @@ const mockUsersResponse = {
   status: 'success',
   data: {
     users: [
-      { _id: 'USR-001', name: 'Ahmed Samir', email: 'ahmed@example.com', role: 'user', credits: 1250, sessions: 24, status: 'active', isVerified: true },
-      { _id: 'USR-002', name: 'Sara Ali', email: 'sara@example.com', role: 'provider', credits: 3210, sessions: 56, status: 'active', isVerified: true },
+      { _id: 'USR-001', name: 'Ahmed Samir', email: 'ahmed@example.com', role: 'user', walletBalance: 1250, totalSessionsCompleted: 24, status: 'active', isVerified: true },
+      { _id: 'USR-002', name: 'Sara Ali', email: 'sara@example.com', role: 'user', walletBalance: 3210, totalSessionsCompleted: 56, status: 'active', isVerified: true },
     ],
   },
   pagination: { page: 1, limit: 10, totalCount: 2, totalPages: 1 },
@@ -62,9 +62,9 @@ describe('Users Component', () => {
 
   it('should reset page to 1 on role change', () => {
     component.currentPage.set(2);
-    component.onRoleChange('provider');
+    component.onRoleChange('admin');
     expect(component.currentPage()).toBe(1);
-    expect(component.selectedRole()).toBe('provider');
+    expect(component.selectedRole()).toBe('admin');
   });
 
   it('should not change page below 1', () => {
@@ -87,9 +87,12 @@ describe('Users Component', () => {
     expect(component.getStatusClass('inactive')).toContain('badge--inactive');
   });
 
+  it('should return inactive badge class when status is undefined', () => {
+    expect(component.getStatusClass(undefined)).toContain('badge--inactive');
+  });
+
   it('should return correct role labels', () => {
     expect(component.getRoleLabel('user')).toBe('User');
-    expect(component.getRoleLabel('provider')).toBe('Provider');
     expect(component.getRoleLabel('admin')).toBe('Admin');
   });
 

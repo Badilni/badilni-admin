@@ -83,7 +83,7 @@
                     {{ log.action }}
                   </span>
                 </td>
-                <td class="td-reason">{{ log.details }}</td>
+                <td class="td-reason">{{ formatDetails(log.details) }}</td>
                 <td class="td-date">{{ log.createdAt }}</td>
               </tr>
             }

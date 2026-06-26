@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth-guard';
 import { adminGuard } from './core/guards/admin-guard';
 
 export const routes: Routes = [
@@ -9,36 +10,34 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
 
-  // =========================
-  // Auth (NO Layout)
-  // =========================
+  // Auth routes (public)
   {
     path: 'auth',
     children: [
       {
         path: 'login',
         loadComponent: () =>
-          import('./features/auth/login/login').then(m => m.Login),
+          import('./features/auth/login/login').then((m) => m.Login),
       },
       {
         path: 'forgot-password',
         loadComponent: () =>
           import('./features/auth/forgot-password/forgot-password').then(
-            m => m.ForgotPassword
+            (m) => m.ForgotPassword,
           ),
       },
       {
         path: 'reset-password',
         loadComponent: () =>
           import('./features/auth/reset-password/reset-password').then(
-            m => m.ResetPassword
+            (m) => m.ResetPassword,
           ),
       },
       {
         path: 'verify-email',
         loadComponent: () =>
           import('./features/auth/verify-email/verify-email').then(
-            m => m.VerifyEmail
+            (m) => m.VerifyEmail,
           ),
       },
       {
@@ -49,70 +48,68 @@ export const routes: Routes = [
     ],
   },
 
-  // =========================
-  // ADMIN AREA (WITH LAYOUT)
-  // =========================
+  // Protected admin routes — all wrapped in the Layout shell (sidebar + header)
   {
     path: '',
     canActivate: [adminGuard],
     loadComponent: () =>
-      import('./shared/components/layout/layout').then(m => m.Layout),
+      import('./shared/components/layout/layout').then((m) => m.Layout),
     children: [
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./features/dashboard/dashboard').then(m => m.Dashboard),
+          import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
         path: 'users',
         loadComponent: () =>
-          import('./features/users/users').then(m => m.Users),
+          import('./features/users/users').then((m) => m.Users),
       },
       {
         path: 'listings',
         loadComponent: () =>
-          import('./features/listings/listings').then(m => m.Listings),
+          import('./features/listings/listings').then((m) => m.Listings),
       },
       {
         path: 'categories',
         loadComponent: () =>
-          import('./features/categories/categories').then(m => m.Categories),
+          import('./features/categories/categories').then((m) => m.Categories),
       },
       {
         path: 'transactions',
         loadComponent: () =>
-          import('./features/transactions/transactions').then(m => m.Transactions),
+          import('./features/transactions/transactions').then(
+            (m) => m.Transactions,
+          ),
       },
       {
         path: 'disputes',
         loadComponent: () =>
-          import('./features/disputes/disputes').then(m => m.Disputes),
+          import('./features/disputes/disputes').then((m) => m.Disputes),
       },
       {
         path: 'notifications',
         loadComponent: () =>
-          import('./features/notifications/notifications').then(m => m.Notifications),
+          import('./features/notifications/notifications').then(
+            (m) => m.Notifications,
+          ),
       },
       {
         path: 'audit-log',
         loadComponent: () =>
-          import('./features/audit-log/audit-log').then(m => m.AuditLog),
+          import('./features/audit-log/audit-log').then((m) => m.AuditLog),
       },
     ],
   },
 
-  // =========================
-  // Forbidden
-  // =========================
+  // Forbidden page (public, outside Layout)
   {
     path: 'forbidden',
     loadComponent: () =>
-      import('./features/auth/login/login').then(m => m.Login),
+      import('./features/auth/login/login').then((m) => m.Login),
   },
 
-  // =========================
   // Wildcard
-  // =========================
   {
     path: '**',
     redirectTo: 'dashboard',

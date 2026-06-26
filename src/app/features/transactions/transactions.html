@@ -59,8 +59,8 @@
           <thead>
             <tr>
               <th>Transaction ID</th>
-              <th>From</th>
-              <th>To</th>
+              <th>Sender</th>
+              <th>Receiver</th>
               <th>Amount (TC)</th>
               <th>Type</th>
               <th>Date</th>
@@ -73,8 +73,8 @@
                 <td class="td-ref">#{{ tx.sender }}</td>
                 <td class="td-ref">#{{ tx.receiver }}</td>
                 <td>
-                  <span [class]="getAmountClass(tx.amount)">
-                    {{ formatAmount(tx.amount) }}
+                  <span [class]="getAmountClass(tx.type)">
+                    {{ formatAmount(tx.amount, tx.type) }}
                   </span>
                 </td>
                 <td>
@@ -82,7 +82,7 @@
                     {{ tx.type }}
                   </span>
                 </td>
-                <td class="td-date">{{ tx.createdAt ?? '-' }}</td>
+                <td class="td-date">{{ tx.createdAt }}</td>
               </tr>
             }
           </tbody>

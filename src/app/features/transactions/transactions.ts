@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import {
   Transactions as TransactionsService,
@@ -27,11 +27,11 @@ export class Transactions implements OnInit {
 
   readonly types = [
     'All Types',
-    'session_payment',
+    'credit',
+    'debit',
+    'escrow_hold',
+    'escrow_release',
     'refund',
-    'welcome_bonus',
-    'admin_adjustment',
-    'credit_adjust',
   ];
 
   constructor(private transactionsService: TransactionsService) {}
@@ -62,12 +62,12 @@ export class Transactions implements OnInit {
       error: () => {
         // ⚠️ BACKEND NOT READY – /transactions admin endpoint not yet implemented
         this.transactions.set([
-          { _id: 'TXI-9F00TA', from: 'USR-2311', to: 'PRV-1045', amount: -150, type: 'session_payment', date: '2025-05-20 14:30' },
-          { _id: 'TXI-BE70B',  from: 'PRV-987',  to: 'USR-1456', amount:  200, type: 'refund',           date: '2025-05-20 12:15' },
-          { _id: 'TXI-706C5A', from: 'System',   to: 'USR-3322', amount:   50, type: 'welcome_bonus',    date: '2025-05-20 09:00' },
-          { _id: 'TXI-6C9B4A', from: 'Admin',    to: 'USR-7768', amount:  100, type: 'admin_adjustment', date: '2025-05-19 18:45' },
-          { _id: 'TXI-8AA43F', from: 'USR-8899', to: 'PRV-165',  amount: -100, type: 'session_payment',  date: '2025-05-19 16:20' },
-        ] as unknown as Transaction[]);
+          { _id: 'TXI-9F00TA', sender: 'USR-2311', receiver: 'PRV-1045', amount: 150, type: 'debit',          status: 'completed', createdAt: '2025-05-20 14:30' },
+          { _id: 'TXI-BE70B',  sender: 'PRV-987',  receiver: 'USR-1456', amount: 200, type: 'refund',         status: 'completed', createdAt: '2025-05-20 12:15' },
+          { _id: 'TXI-706C5A', sender: 'System',   receiver: 'USR-3322', amount: 50,  type: 'credit',         status: 'completed', createdAt: '2025-05-20 09:00' },
+          { _id: 'TXI-6C9B4A', sender: 'Admin',    receiver: 'USR-7768', amount: 100, type: 'credit',         status: 'completed', createdAt: '2025-05-19 18:45' },
+          { _id: 'TXI-8AA43F', sender: 'USR-8899', receiver: 'PRV-165',  amount: 100, type: 'escrow_hold',    status: 'pending',   createdAt: '2025-05-19 16:20' },
+        ] as Transaction[]);
         this.totalPages.set(1);
         this.totalCount.set(12458);
         this.isLoading.set(false);
@@ -93,20 +93,25 @@ export class Transactions implements OnInit {
 
   getTypeClass(type: string): string {
     const map: Record<string, string> = {
-      session_payment:  'type-badge type-badge--blue',
-      refund:           'type-badge type-badge--green',
-      welcome_bonus:    'type-badge type-badge--teal',
-      admin_adjustment: 'type-badge type-badge--purple',
-      credit_adjust:    'type-badge type-badge--orange',
+      credit:          'type-badge type-badge--green',
+      debit:           'type-badge type-badge--blue',
+      escrow_hold:      'type-badge type-badge--orange',
+      escrow_release:   'type-badge type-badge--teal',
+      refund:          'type-badge type-badge--purple',
     };
     return map[type] ?? 'type-badge';
   }
 
-  getAmountClass(amount: number): string {
-    return amount < 0 ? 'amount amount--negative' : 'amount amount--positive';
+  isOutgoing(type: string): boolean {
+    return type === 'debit' || type === 'escrow_hold';
   }
 
-  formatAmount(amount: number): string {
-    return `${amount > 0 ? '+' : ''}${amount} TC`;
+  getAmountClass(type: string): string {
+    return this.isOutgoing(type) ? 'amount amount--negative' : 'amount amount--positive';
+  }
+
+  formatAmount(amount: number, type: string): string {
+    const sign = this.isOutgoing(type) ? '-' : '+';
+    return `${sign}${amount} TC`;
   }
 }

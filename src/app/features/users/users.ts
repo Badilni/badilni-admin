@@ -1,20 +1,13 @@
 import { Component, OnInit, signal } from '@angular/core';
+import { DecimalPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Users as UsersService, UsersQueryParams } from '../../core/services/users';
 import { User } from '../../core/models/user';
-import {
-  CommonModule,
-  DecimalPipe,
-  TitleCasePipe
-} from '@angular/common';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule,
-  FormsModule,
-  DecimalPipe,
-  TitleCasePipe],
+  imports: [FormsModule, DecimalPipe, TitleCasePipe],
   templateUrl: './users.html',
   styleUrl: './users.css',
 })
@@ -30,7 +23,7 @@ export class Users implements OnInit {
   totalCount = signal(0);
   limit = 10;
 
-  roles = ['All Roles', 'user', 'provider', 'admin'];
+  roles = ['All Roles', 'user', 'admin'];
 
   constructor(private usersService: UsersService) {}
 
@@ -59,12 +52,12 @@ export class Users implements OnInit {
       error: () => {
         // ⚠️ Mock data – replace when backend /users is ready
         this.users.set([
-          { _id: 'USR-2311', name: 'Ahmed Samir', email: 'ahmed@example.com', role: 'user', credits: 1250, sessions: 24, status: 'active', isVerified: true },
-          { _id: 'USR-1456', name: 'Sara Ali', email: 'sara@example.com', role: 'provider', credits: 3210, sessions: 56, status: 'active', isVerified: true },
-          { _id: 'USR-3322', name: 'Mohamed Hassan', email: 'mohamed@example.com', role: 'user', credits: 320, sessions: 8, status: 'suspended', isVerified: true },
-          { _id: 'USR-7768', name: 'Omar Khaled', email: 'omar@example.com', role: 'provider', credits: 1040, sessions: 102, status: 'active', isVerified: true },
-          { _id: 'USR-8899', name: 'Nouran Magdy', email: 'nouran@example.com', role: 'user', credits: 980, sessions: 19, status: 'active', isVerified: true },
-        ] as unknown as User[]);
+          { _id: 'USR-2311', name: 'Ahmed Samir',   email: 'ahmed@example.com',   role: 'user',  walletBalance: 1250, totalSessionsCompleted: 24,  status: 'active',    isVerified: true },
+          { _id: 'USR-1456', name: 'Sara Ali',      email: 'sara@example.com',    role: 'user',  walletBalance: 3210, totalSessionsCompleted: 56,  status: 'active',    isVerified: true },
+          { _id: 'USR-3322', name: 'Mohamed Hassan', email: 'mohamed@example.com', role: 'user',  walletBalance: 320,  totalSessionsCompleted: 8,   status: 'suspended', isVerified: true },
+          { _id: 'USR-7768', name: 'Omar Khaled',   email: 'omar@example.com',    role: 'user',  walletBalance: 1040, totalSessionsCompleted: 102, status: 'active',    isVerified: true },
+          { _id: 'USR-8899', name: 'Nouran Magdy',  email: 'nouran@example.com',  role: 'user',  walletBalance: 980,  totalSessionsCompleted: 19,  status: 'active',    isVerified: true },
+        ] as User[]);
         this.totalPages.set(5);
         this.totalCount.set(50);
         this.isLoading.set(false);
@@ -115,19 +108,18 @@ export class Users implements OnInit {
     return Array.from({ length: this.totalPages() }, (_, i) => i + 1);
   }
 
-  getStatusClass(status: string): string {
+  getStatusClass(status: string | undefined): string {
     const map: Record<string, string> = {
       active: 'badge badge--active',
       suspended: 'badge badge--suspended',
       inactive: 'badge badge--inactive',
     };
-    return map[status] ?? 'badge';
+    return map[status ?? 'inactive'] ?? 'badge';
   }
 
   getRoleLabel(role: string): string {
     const map: Record<string, string> = {
       user: 'User',
-      provider: 'Provider',
       admin: 'Admin',
     };
     return map[role] ?? role;

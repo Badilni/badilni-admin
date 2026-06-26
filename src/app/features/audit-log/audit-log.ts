@@ -69,7 +69,7 @@ export class AuditLog implements OnInit {
             admin: 'ADM-001',
             targetId: 'USR-2311',
             action: 'suspend',
-            details: 'Violation of terms',
+            details: { reason: 'Violation of terms' },
             createdAt: 'May 20, 2025 14:30',
           },
           {
@@ -77,7 +77,7 @@ export class AuditLog implements OnInit {
             admin: 'ADM-002',
             targetId: 'USR-1456',
             action: 'credit_adjust',
-            details: 'Manual adjustment',
+            details: { reason: 'Manual adjustment' },
             createdAt: 'May 20, 2025 12:15',
           },
           {
@@ -85,7 +85,7 @@ export class AuditLog implements OnInit {
             admin: 'ADM-001',
             targetId: 'USR-3322',
             action: 'unsuspend',
-            details: 'Appeal approved',
+            details: { reason: 'Appeal approved' },
             createdAt: 'May 20, 2025 09:00',
           },
           {
@@ -93,7 +93,7 @@ export class AuditLog implements OnInit {
             admin: 'ADM-003',
             targetId: 'USR-7768',
             action: 'delete',
-            details: 'Spam content',
+            details: { reason: 'Spam content' },
             createdAt: 'May 19, 2025 18:45',
           },
           {
@@ -101,10 +101,10 @@ export class AuditLog implements OnInit {
             admin: 'ADM-002',
             targetId: 'USR-8899',
             action: 'resolve_dispute',
-            details: 'Favor receiver',
+            details: { reason: 'Favor receiver' },
             createdAt: 'May 19, 2025 16:20',
           },
-        ] as unknown as AdminAction[]);
+        ] as AdminAction[]);
         this.totalPages.set(1);
         this.totalCount.set(8542);
         this.isLoading.set(false);
@@ -146,7 +146,13 @@ export class AuditLog implements OnInit {
     return `#${id}`;
   }
 
-  formatTargetId(id?: string): string {
-    return id ? `#${id}` : '-';
+  formatTargetId(id: string | undefined): string {
+    return id ? `#${id}` : '—';
+  }
+
+  formatDetails(details: Record<string, unknown> | undefined): string {
+    if (!details) return '—';
+    if (typeof details['reason'] === 'string') return details['reason'];
+    return Object.values(details).join(', ') || '—';
   }
 }

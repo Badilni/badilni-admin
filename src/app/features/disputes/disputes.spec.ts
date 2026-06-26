@@ -5,15 +5,15 @@ import { Disputes } from './disputes';
 import { Disputes as DisputesService } from '../../core/services/disputes';
 import { Booking } from '../../core/models/booking';
 
-const mockBooking = {
+const mockBooking: Booking = {
   _id: 'BK5-7P3A',
   provider: 'PRV-1045',
-  receiver: 'USR-2311',
-  amount: 150,
-  sessionSec: 0,
+  requester: 'USR-2311',
+  listing: 'LST-001',
+  creditsAmount: 150,
   status: 'disputed',
-  date: '2025-05-31',
-} as unknown as Booking;
+  createdAt: '2025-05-31',
+};
 
 const mockResponse = {
   status: 'success',
