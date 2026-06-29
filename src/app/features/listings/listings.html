@@ -226,14 +226,14 @@
             (input)="updateForm('title', $any($event.target).value)" />
         </div>
         <div class="form-group">
-          <label class="form-label">Provider ID</label>
-          <input class="form-input" type="text" placeholder="PRV-0000"
-            [value]="formData().provider ?? ''"
-            (input)="updateForm('provider', $any($event.target).value)" />
+          <label class="form-label">Category ID</label>
+          <input class="form-input" type="text" placeholder="MongoDB category ObjectId"
+            [value]="formData().category ?? ''"
+            (input)="updateForm('category', $any($event.target).value)" />
         </div>
         <div class="form-group">
-          <label class="form-label">Price (TC)</label>
-          <input class="form-input" type="number" placeholder="0"
+          <label class="form-label">Hourly Rate (TC)</label>
+          <input class="form-input" type="number" placeholder="1–20"
             [value]="formData().price ?? 0"
             (input)="updateForm('price', +$any($event.target).value)" />
         </div>

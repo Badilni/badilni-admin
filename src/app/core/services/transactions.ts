@@ -4,32 +4,25 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Transaction } from '../models/transaction';
+import {
+  mapTransactionFromApi,
+  normalizePagination,
+  NormalizedPagination,
+} from '../mappers/api-mappers';
 
 export interface TransactionsResponse {
   status: string;
   data: {
     transactions: Transaction[];
   };
-  pagination: {
-    page: number;
-    limit: number;
-    totalCount: number;
-    totalPages: number;
-  };
-}
-
-export interface TransactionResponse {
-  status: string;
-  data: {
-    transaction: Transaction;
-  };
+  pagination: NormalizedPagination;
 }
 
 export interface TransactionsQueryParams {
   page?: number;
   limit?: number;
   type?: string;
-  status?: string;
+  userId?: string;
   sort?: string;
 }
 
@@ -37,8 +30,7 @@ export interface TransactionsQueryParams {
   providedIn: 'root',
 })
 export class Transactions {
-  // ⚠️ BACKEND NOT READY: /api/v1/transactions admin endpoint not yet implemented
-  private readonly apiUrl = `${environment.apiUrl}/transactions`;
+  private readonly apiUrl = `${environment.apiUrl}/transactions/admin`;
 
   constructor(private http: HttpClient) {}
 
@@ -47,19 +39,19 @@ export class Transactions {
     if (params.page) httpParams = httpParams.set('page', params.page);
     if (params.limit) httpParams = httpParams.set('limit', params.limit);
     if (params.type) httpParams = httpParams.set('type', params.type);
-    if (params.status) httpParams = httpParams.set('status', params.status);
-    if (params.sort) httpParams = httpParams.set('sort', params.sort);
+    if (params.userId) httpParams = httpParams.set('userId', params.userId);
 
     return this.http
-      .get<TransactionsResponse>(this.apiUrl, { params: httpParams })
-      .pipe(catchError(this.handleError));
-  }
-
-  getById(id: string): Observable<Transaction> {
-    return this.http
-      .get<TransactionResponse>(`${this.apiUrl}/${id}`)
+      .get<{ status: string; data: { transactions: Record<string, unknown>[] }; pagination: Record<string, number> }>(
+        this.apiUrl,
+        { params: httpParams },
+      )
       .pipe(
-        map((res) => res.data.transaction),
+        map((res) => ({
+          status: res.status,
+          data: { transactions: res.data.transactions.map(mapTransactionFromApi) },
+          pagination: normalizePagination(res.pagination),
+        })),
         catchError(this.handleError),
       );
   }

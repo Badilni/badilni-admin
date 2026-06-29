@@ -1,7 +1,8 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { signal } from '@angular/core';
 import { NavItem } from '../../../core/models/nav-item';
 import { Auth } from '../../../core/services/auth';
 
@@ -13,8 +14,10 @@ import { Auth } from '../../../core/services/auth';
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
-  currentUser = computed(() => this.authService.currentUser());
+  open = input(false);
+  navigated = output<void>();
 
+  currentUser = computed(() => this.authService.currentUser());
   activeRoute = signal('/dashboard');
 
   readonly navItems: NavItem[] = [
@@ -32,7 +35,7 @@ export class Sidebar {
     this.activeRoute.set(this.router.url);
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe((e: any) => this.activeRoute.set(e.urlAfterRedirects));
+      .subscribe((e: NavigationEnd) => this.activeRoute.set(e.urlAfterRedirects));
   }
 
   isActive(route: string): boolean {
@@ -41,6 +44,7 @@ export class Sidebar {
 
   navigate(route: string): void {
     this.router.navigate([route]);
+    this.navigated.emit();
   }
 
   onLogout(): void {

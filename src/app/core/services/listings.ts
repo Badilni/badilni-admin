@@ -4,18 +4,19 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Listing } from '../models/listing';
+import {
+  mapListingFromApi,
+  mapListingToApi,
+  normalizePagination,
+  NormalizedPagination,
+} from '../mappers/api-mappers';
 
 export interface ListingsResponse {
   status: string;
   data: {
     listings: Listing[];
   };
-  pagination: {
-    page: number;
-    limit: number;
-    totalCount: number;
-    totalPages: number;
-  };
+  pagination: NormalizedPagination;
 }
 
 export interface ListingResponse {
@@ -37,8 +38,7 @@ export interface ListingsQueryParams {
   providedIn: 'root',
 })
 export class Listings {
-  // ⚠️ BACKEND NOT READY: /api/v1/listings endpoint not yet implemented
-  private readonly apiUrl = `${environment.apiUrl}/listings`;
+  private readonly apiUrl = `${environment.apiUrl}/skill-listings`;
 
   constructor(private http: HttpClient) {}
 
@@ -47,37 +47,56 @@ export class Listings {
     if (params.page) httpParams = httpParams.set('page', params.page);
     if (params.limit) httpParams = httpParams.set('limit', params.limit);
     if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
-    if (params.status) httpParams = httpParams.set('status', params.status);
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
 
+    if (params.status === 'active') {
+      httpParams = httpParams.set('isActive', 'true');
+    } else if (params.status === 'inactive') {
+      httpParams = httpParams.set('isActive', 'false');
+    }
+
     return this.http
-      .get<ListingsResponse>(this.apiUrl, { params: httpParams })
-      .pipe(catchError(this.handleError));
+      .get<{ status: string; data: { skillListings: Record<string, unknown>[] }; pagination: Record<string, number> }>(
+        this.apiUrl,
+        { params: httpParams },
+      )
+      .pipe(
+        map((res) => ({
+          status: res.status,
+          data: { listings: res.data.skillListings.map(mapListingFromApi) },
+          pagination: normalizePagination(res.pagination),
+        })),
+        catchError(this.handleError),
+      );
   }
 
   getById(id: string): Observable<Listing> {
     return this.http
-      .get<ListingResponse>(`${this.apiUrl}/${id}`)
+      .get<{ status: string; data: { skillListing: Record<string, unknown> } }>(`${this.apiUrl}/${id}`)
       .pipe(
-        map((res) => res.data.listing),
+        map((res) => mapListingFromApi(res.data.skillListing)),
         catchError(this.handleError),
       );
   }
 
   create(data: Partial<Listing>): Observable<Listing> {
+    const payload = mapListingToApi(data);
+
     return this.http
-      .post<ListingResponse>(this.apiUrl, data)
+      .post<{ status: string; data: { skillListing: Record<string, unknown> } }>(this.apiUrl, payload)
       .pipe(
-        map((res) => res.data.listing),
+        map((res) => mapListingFromApi(res.data.skillListing)),
         catchError(this.handleError),
       );
   }
 
   update(id: string, data: Partial<Listing>): Observable<Listing> {
+    const payload = mapListingToApi(data);
+
     return this.http
-      .patch<ListingResponse>(`${this.apiUrl}/${id}`, data)
+      .patch<{ status: string; data: { skillListing: Record<string, unknown> } }>(`${this.apiUrl}/${id}`, payload)
       .pipe(
-        map((res) => res.data.listing),
+        map((res) => mapListingFromApi(res.data.skillListing)),
         catchError(this.handleError),
       );
   }

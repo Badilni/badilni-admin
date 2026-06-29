@@ -4,18 +4,19 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User } from '../models/user';
+import {
+  mapUserFromApi,
+  mapUserToApi,
+  normalizePagination,
+  NormalizedPagination,
+} from '../mappers/api-mappers';
 
 export interface UsersResponse {
   status: string;
   data: {
     users: User[];
   };
-  pagination: {
-    page: number;
-    limit: number;
-    totalCount: number;
-    totalPages: number;
-  };
+  pagination: NormalizedPagination;
 }
 
 export interface UserResponse {
@@ -33,6 +34,14 @@ export interface UsersQueryParams {
   sort?: string;
 }
 
+export interface CreateUserPayload {
+  name: string;
+  email: string;
+  password: string;
+  role?: 'user' | 'admin';
+  status?: User['status'];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -46,28 +55,62 @@ export class Users {
     if (params.page) httpParams = httpParams.set('page', params.page);
     if (params.limit) httpParams = httpParams.set('limit', params.limit);
     if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
-    if (params.role) httpParams = httpParams.set('role', params.role);
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
 
     return this.http
-      .get<UsersResponse>(this.apiUrl, { params: httpParams })
-      .pipe(catchError(this.handleError));
+      .get<{ status: string; data: { users: Record<string, unknown>[] }; pagination: Record<string, number> }>(
+        this.apiUrl,
+        { params: httpParams },
+      )
+      .pipe(
+        map((res) => {
+          let users = res.data.users.map(mapUserFromApi);
+          if (params.role && params.role !== 'All Roles') {
+            users = users.filter((u) => u.role === params.role);
+          }
+          return {
+            status: res.status,
+            data: { users },
+            pagination: normalizePagination(res.pagination),
+          };
+        }),
+        catchError(this.handleError),
+      );
   }
 
   getById(id: string): Observable<User> {
     return this.http
-      .get<UserResponse>(`${this.apiUrl}/${id}`)
+      .get<{ status: string; data: { user: Record<string, unknown> } }>(`${this.apiUrl}/${id}`)
       .pipe(
-        map((res) => res.data.user),
+        map((res) => mapUserFromApi(res.data.user)),
+        catchError(this.handleError),
+      );
+  }
+
+  create(data: CreateUserPayload): Observable<User> {
+    const payload = mapUserToApi({
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      role: data.role,
+      status: data.status,
+    });
+
+    return this.http
+      .post<{ status: string; data: { user: Record<string, unknown> } }>(this.apiUrl, payload)
+      .pipe(
+        map((res) => mapUserFromApi(res.data.user)),
         catchError(this.handleError),
       );
   }
 
   update(id: string, data: Partial<User>): Observable<User> {
+    const payload = mapUserToApi(data);
+
     return this.http
-      .patch<UserResponse>(`${this.apiUrl}/${id}`, data)
+      .patch<{ status: string; data: { user: Record<string, unknown> } }>(`${this.apiUrl}/${id}`, payload)
       .pipe(
-        map((res) => res.data.user),
+        map((res) => mapUserFromApi(res.data.user)),
         catchError(this.handleError),
       );
   }

@@ -21,7 +21,7 @@ describe('Users Component', () => {
   let usersServiceSpy: jasmine.SpyObj<UsersService>;
 
   beforeEach(async () => {
-    usersServiceSpy = jasmine.createSpyObj('UsersService', ['getAll', 'delete']);
+    usersServiceSpy = jasmine.createSpyObj('UsersService', ['getAll', 'create', 'update', 'delete']);
     usersServiceSpy.getAll.and.returnValue(of(mockUsersResponse));
     usersServiceSpy.delete.and.returnValue(of(undefined));
 

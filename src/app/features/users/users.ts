@@ -45,6 +45,7 @@ export class Users implements OnInit {
     role: 'user',
     status: 'active',
   });
+  formPassword = signal('');
 
   roles = ['All Roles', 'user', 'admin'];
   statusOptions: User['status'][] = ['active', 'suspended', 'inactive'];
@@ -154,6 +155,7 @@ export class Users implements OnInit {
   openCreateModal(): void {
     this.isEditMode.set(false);
     this.formData.set({ name: '', email: '', role: 'user', status: 'active' });
+    this.formPassword.set('');
     this.showEditModal.set(true);
   }
 
@@ -205,27 +207,44 @@ export class Users implements OnInit {
         },
       });
     } else {
-      const newUser: User = {
-        _id: `USR-${Date.now()}`,
+      if (!this.formPassword().trim() || this.formPassword().length < 8) {
+        this.modalLoading.set(false);
+        return;
+      }
+
+      this.usersService.create({
         name: data.name!,
         email: data.email!,
-        role: data.role ?? 'user',
-        status: data.status ?? 'active',
-        isVerified: false,
-        walletBalance: 0,
-        totalSessionsCompleted: 0,
-      };
-
-      if (this.usingMock()) {
-        this.mockUsers.unshift(newUser);
-        this.modalLoading.set(false);
-        this.closeEditModal();
-        this.applyMockFilter();
-      } else {
-        this.modalLoading.set(false);
-        this.closeEditModal();
-        this.loadUsers();
-      }
+        password: this.formPassword(),
+        role: data.role,
+        status: data.status,
+      }).subscribe({
+        next: () => {
+          this.modalLoading.set(false);
+          this.closeEditModal();
+          this.loadUsers();
+        },
+        error: () => {
+          if (this.usingMock()) {
+            const newUser: User = {
+              _id: `USR-${Date.now()}`,
+              name: data.name!,
+              email: data.email!,
+              role: data.role ?? 'user',
+              status: data.status ?? 'active',
+              isVerified: false,
+              walletBalance: 0,
+              totalSessionsCompleted: 0,
+            };
+            this.mockUsers.unshift(newUser);
+            this.modalLoading.set(false);
+            this.closeEditModal();
+            this.applyMockFilter();
+          } else {
+            this.modalLoading.set(false);
+          }
+        },
+      });
     }
   }
 

@@ -32,21 +32,20 @@ export class Transactions implements OnInit {
   selectedTransaction = signal<Transaction | null>(null);
 
   private readonly mockTransactions: Transaction[] = [
-    { _id: 'TXI-9F00TA', sender: 'USR-2311', receiver: 'PRV-1045', amount: 150, type: 'debit', status: 'completed', createdAt: '2025-05-20 14:30' },
-    { _id: 'TXI-BE70B', sender: 'PRV-987', receiver: 'USR-1456', amount: 200, type: 'refund', status: 'completed', createdAt: '2025-05-20 12:15' },
-    { _id: 'TXI-706C5A', sender: 'System', receiver: 'USR-3322', amount: 50, type: 'credit', status: 'completed', createdAt: '2025-05-20 09:00' },
-    { _id: 'TXI-6C9B4A', sender: 'Admin', receiver: 'USR-7768', amount: 100, type: 'credit', status: 'completed', createdAt: '2025-05-19 18:45' },
-    { _id: 'TXI-8AA43F', sender: 'USR-8899', receiver: 'PRV-165', amount: 100, type: 'escrow_hold', status: 'pending', createdAt: '2025-05-19 16:20' },
-    { _id: 'TXI-1DD22E', sender: 'USR-2311', receiver: 'PRV-555', amount: 75, type: 'escrow_release', status: 'completed', createdAt: '2025-05-18 11:00' },
+    { _id: 'TXI-9F00TA', sender: 'Ahmed Samir', receiver: 'Sara Ali', amount: 150, type: 'session_payment', status: 'completed', createdAt: '2025-05-20 14:30' },
+    { _id: 'TXI-BE70B', sender: 'System', receiver: 'Mohamed Hassan', amount: 200, type: 'refund', status: 'completed', createdAt: '2025-05-20 12:15' },
+    { _id: 'TXI-706C5A', sender: 'System', receiver: 'Omar Khaled', amount: 50, type: 'welcome_bonus', status: 'completed', createdAt: '2025-05-20 09:00' },
+    { _id: 'TXI-6C9B4A', sender: 'Admin', receiver: 'Nouran Magdy', amount: 100, type: 'admin_adjustment', status: 'completed', createdAt: '2025-05-19 18:45' },
+    { _id: 'TXI-8AA43F', sender: 'Ahmed Samir', receiver: 'Ahmed Samir', amount: 100, type: 'escrow_lock', status: 'completed', createdAt: '2025-05-19 16:20' },
   ];
 
   readonly types = [
     'All Types',
-    'credit',
-    'debit',
-    'escrow_hold',
-    'escrow_release',
+    'session_payment',
+    'escrow_lock',
     'refund',
+    'welcome_bonus',
+    'admin_adjustment',
   ];
 
   constructor(private transactionsService: TransactionsService) {}
@@ -149,17 +148,17 @@ export class Transactions implements OnInit {
 
   getTypeClass(type: string): string {
     const map: Record<string, string> = {
-      credit: 'type-badge type-badge--green',
-      debit: 'type-badge type-badge--blue',
-      escrow_hold: 'type-badge type-badge--orange',
-      escrow_release: 'type-badge type-badge--teal',
+      session_payment: 'type-badge type-badge--blue',
+      escrow_lock: 'type-badge type-badge--orange',
       refund: 'type-badge type-badge--purple',
+      welcome_bonus: 'type-badge type-badge--green',
+      admin_adjustment: 'type-badge type-badge--teal',
     };
     return map[type] ?? 'type-badge';
   }
 
   isOutgoing(type: string): boolean {
-    return type === 'debit' || type === 'escrow_hold';
+    return type === 'session_payment' || type === 'escrow_lock';
   }
 
   getAmountClass(type: string): string {

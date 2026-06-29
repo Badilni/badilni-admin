@@ -49,7 +49,7 @@ export class Listings implements OnInit {
   });
   tagsInput = signal('');
 
-  statuses = ['All Status', 'active', 'inactive', 'pending', 'suspended'];
+  statuses = ['All Status', 'active', 'inactive'];
 
   constructor(private listingsService: ListingsService) {}
 
@@ -135,7 +135,7 @@ export class Listings implements OnInit {
   }
 
   openCreateModal(): void {
-    this.formData.set({ title: '', provider: '', price: 0, tags: [], status: 'active', description: '' });
+    this.formData.set({ title: '', provider: '', price: 1, tags: [], status: 'active', description: '', category: '' });
     this.tagsInput.set('');
     this.modalMode.set('create');
   }
@@ -158,7 +158,10 @@ export class Listings implements OnInit {
 
   onSave(): void {
     const data = this.formData();
-    if (!data.title?.trim() || !data.provider?.trim()) return;
+    if (!data.title?.trim()) return;
+    if (this.modalMode() === 'create' && (!data.category?.trim() || !data.description?.trim() || data.description.length < 20)) {
+      return;
+    }
 
     const tags = this.tagsInput()
       .split(',')

@@ -4,18 +4,14 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Category } from '../models/category';
+import { mapCategoryFromApi, normalizePagination, NormalizedPagination } from '../mappers/api-mappers';
 
 export interface CategoriesResponse {
   status: string;
   data: {
     categories: Category[];
   };
-  pagination: {
-    page: number;
-    limit: number;
-    totalCount: number;
-    totalPages: number;
-  };
+  pagination: NormalizedPagination;
 }
 
 export interface CategoryResponse {
@@ -36,7 +32,6 @@ export interface CategoriesQueryParams {
   providedIn: 'root',
 })
 export class Categories {
-  // ⚠️ BACKEND NOT READY: /api/v1/categories endpoint not yet implemented
   private readonly apiUrl = `${environment.apiUrl}/categories`;
 
   constructor(private http: HttpClient) {}
@@ -49,33 +44,46 @@ export class Categories {
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
 
     return this.http
-      .get<CategoriesResponse>(this.apiUrl, { params: httpParams })
-      .pipe(catchError(this.handleError));
+      .get<{ status: string; data: { categories: Record<string, unknown>[] }; pagination: Record<string, number> }>(
+        this.apiUrl,
+        { params: httpParams },
+      )
+      .pipe(
+        map((res) => ({
+          status: res.status,
+          data: { categories: res.data.categories.map(mapCategoryFromApi) },
+          pagination: normalizePagination(res.pagination),
+        })),
+        catchError(this.handleError),
+      );
   }
 
   getById(id: string): Observable<Category> {
     return this.http
-      .get<CategoryResponse>(`${this.apiUrl}/${id}`)
+      .get<{ status: string; data: { category: Record<string, unknown> } }>(`${this.apiUrl}/${id}`)
       .pipe(
-        map((res) => res.data.category),
+        map((res) => mapCategoryFromApi(res.data.category)),
         catchError(this.handleError),
       );
   }
 
   create(data: Partial<Category>): Observable<Category> {
     return this.http
-      .post<CategoryResponse>(this.apiUrl, data)
+      .post<{ status: string; data: { category: Record<string, unknown> } }>(this.apiUrl, { name: data.name })
       .pipe(
-        map((res) => res.data.category),
+        map((res) => mapCategoryFromApi(res.data.category)),
         catchError(this.handleError),
       );
   }
 
   update(id: string, data: Partial<Category>): Observable<Category> {
+    const body: Record<string, string> = {};
+    if (data.name) body['name'] = data.name;
+
     return this.http
-      .patch<CategoryResponse>(`${this.apiUrl}/${id}`, data)
+      .patch<{ status: string; data: { category: Record<string, unknown> } }>(`${this.apiUrl}/${id}`, body)
       .pipe(
-        map((res) => res.data.category),
+        map((res) => mapCategoryFromApi(res.data.category)),
         catchError(this.handleError),
       );
   }
