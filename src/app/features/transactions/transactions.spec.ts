@@ -27,7 +27,7 @@ describe('Transactions Component', () => {
   let serviceSpy: jasmine.SpyObj<TransactionsService>;
 
   beforeEach(async () => {
-    serviceSpy = jasmine.createSpyObj('TransactionsService', ['getAll']);
+    serviceSpy = jasmine.createSpyObj('TransactionsService', ['getAll', 'adminAdjustment']);
     serviceSpy.getAll.and.returnValue(of(mockResponse));
 
     await TestBed.configureTestingModule({
@@ -119,4 +119,86 @@ describe('Transactions Component', () => {
     component.totalPages.set(3);
     expect(component.getPages()).toEqual([1, 2, 3]);
   });
+
+  // ── Admin Adjustment ──
+
+  it('should open adjustment modal with empty form', () => {
+    component.openAdjustModal();
+    expect(component.showAdjustModal()).toBeTrue();
+    expect(component.adjustForm()).toEqual({ userId: '', amount: 0, description: '' });
+  });
+
+  it('should close adjustment modal', () => {
+    component.showAdjustModal.set(true);
+    component.closeAdjustModal();
+    expect(component.showAdjustModal()).toBeFalse();
+  });
+
+  it('should update adjustment form field', () => {
+    component.updateAdjustForm('userId', 'USR-001');
+    expect(component.adjustForm().userId).toBe('USR-001');
+  });
+
+  it('should set error when userId is empty on submit', () => {
+    component.adjustForm.set({ userId: '', amount: 50, description: 'Reason here' });
+    component.onSubmitAdjustment();
+    expect(component.adjustError()).toBe('User ID is required.');
+    expect(serviceSpy.adminAdjustment).not.toHaveBeenCalled();
+  });
+
+  it('should set error when amount is zero on submit', () => {
+    component.adjustForm.set({ userId: 'USR-001', amount: 0, description: 'Reason here' });
+    component.onSubmitAdjustment();
+    expect(component.adjustError()).toBe('Amount must be a non-zero number.');
+    expect(serviceSpy.adminAdjustment).not.toHaveBeenCalled();
+  });
+
+  it('should set error when description is too short', () => {
+    component.adjustForm.set({ userId: 'USR-001', amount: 50, description: 'Hi' });
+    component.onSubmitAdjustment();
+    expect(component.adjustError()).toBe('Description must be at least 5 characters.');
+    expect(serviceSpy.adminAdjustment).not.toHaveBeenCalled();
+  });
+
+  it('should call adminAdjustment with trimmed payload and reload on success', fakeAsync(() => {
+    serviceSpy.adminAdjustment.and.returnValue(of(mockTx));
+    component.adjustForm.set({ userId: '  USR-001  ', amount: 50, description: '  Manual top-up  ' });
+    component.showAdjustModal.set(true);
+
+    component.onSubmitAdjustment();
+    tick();
+
+    expect(serviceSpy.adminAdjustment).toHaveBeenCalledWith({
+      userId: 'USR-001',
+      amount: 50,
+      description: 'Manual top-up',
+    });
+    expect(component.showAdjustModal()).toBeFalse();
+    expect(component.adjustLoading()).toBeFalse();
+  }));
+
+  it('should fall back to mock transaction on error when usingMock is true', fakeAsync(() => {
+    component.usingMock.set(true);
+    serviceSpy.adminAdjustment.and.returnValue(throwError(() => new Error('error')));
+    component.adjustForm.set({ userId: 'USR-001', amount: 30, description: 'Penalty applied' });
+
+    component.onSubmitAdjustment();
+    tick();
+
+    expect(component.showAdjustModal()).toBeFalse();
+    expect(component.adjustLoading()).toBeFalse();
+  }));
+
+  it('should set adjustError on failure when not using mock', fakeAsync(() => {
+    serviceSpy.adminAdjustment.and.returnValue(
+      throwError(() => ({ error: { message: 'Adjustment would bring the user wallet below zero' } })),
+    );
+    component.adjustForm.set({ userId: 'USR-001', amount: -9999, description: 'Big penalty' });
+
+    component.onSubmitAdjustment();
+    tick();
+
+    expect(component.adjustError()).toBe('Adjustment would bring the user wallet below zero');
+    expect(component.adjustLoading()).toBeFalse();
+  }));
 });

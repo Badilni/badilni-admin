@@ -16,9 +16,7 @@ export class Dashboard implements OnInit {
   stats = signal<DashboardStats | null>(null);
   chartsData = signal<ChartsData | null>(null);
   isLoading = signal(true);
-  error = signal('');
 
-  // Chart data helpers
   sessionDates = signal<string[]>([]);
   sessionCounts = signal<number[]>([]);
   maxSessionCount = signal(0);
@@ -37,16 +35,16 @@ export class Dashboard implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        // ⚠️ BACKEND NOT READY: using mock data until /api/v1/admin/dashboard/stats is implemented
         this.stats.set({
-          totalUsers: 2481,
-          totalListings: 1246,
-          totalTransactions: 45231,
-          totalRevenue: 45231,
-          activeDisputes: 32,
-          newUsersToday: 128,
-          completedBookingsToday: 1246,
+          sessionsThisWeek: 1246,
+          sessionsThisWeekChange: 8,
+          openDisputes: 32,
+          openDisputesChange: 21,
           pendingBookings: 74,
+          pendingBookingsChange: 6,
+          totalCreditsInCirculation: 45231,
+          totalCreditsInEscrow: 5200,
+          creditCirculationChange: 16,
         });
         this.isLoading.set(false);
       },
@@ -60,7 +58,6 @@ export class Dashboard implements OnInit {
         this.buildSessionChart(data);
       },
       error: () => {
-        // ⚠️ BACKEND NOT READY: using mock data until /api/v1/admin/dashboard/charts is implemented
         const mockCharts: ChartsData = {
           sessionsOverview: [
             { date: 'May 14', count: 300 },
@@ -72,18 +69,21 @@ export class Dashboard implements OnInit {
             { date: 'May 20', count: 1246 },
           ],
           sessionsByStatus: {
-            completed: 566,
-            cancelled: 286,
-            disputed: 144,
+            pending: { count: 74, percentage: 6 },
+            accepted: { count: 120, percentage: 10 },
+            declined: { count: 20, percentage: 2 },
+            completed: { count: 566, percentage: 46 },
+            disputed: { count: 144, percentage: 12 },
+            cancelled: { count: 286, percentage: 24 },
           },
           creditFlow: [
-            { date: '14', income: 4000, outcome: -2000 },
-            { date: '15', income: 6000, outcome: -3000 },
-            { date: '16', income: 8000, outcome: -4000 },
-            { date: '17', income: 5000, outcome: -2500 },
-            { date: '18', income: 9000, outcome: -5000 },
-            { date: '19', income: 7000, outcome: -3500 },
-            { date: '20', income: 10000, outcome: -4218 },
+            { date: '14', creditsIn: 4000, creditsOut: 2000 },
+            { date: '15', creditsIn: 6000, creditsOut: 3000 },
+            { date: '16', creditsIn: 8000, creditsOut: 4000 },
+            { date: '17', creditsIn: 5000, creditsOut: 2500 },
+            { date: '18', creditsIn: 9000, creditsOut: 5000 },
+            { date: '19', creditsIn: 7000, creditsOut: 3500 },
+            { date: '20', creditsIn: 10000, creditsOut: 4218 },
           ],
         };
         this.chartsData.set(mockCharts);
@@ -95,7 +95,7 @@ export class Dashboard implements OnInit {
   private buildSessionChart(data: ChartsData): void {
     const dates = data.sessionsOverview.map((s) => s.date);
     const counts = data.sessionsOverview.map((s) => s.count);
-    const max = Math.max(...counts);
+    const max = Math.max(...counts, 0);
     this.sessionDates.set(dates);
     this.sessionCounts.set(counts);
     this.maxSessionCount.set(max);
@@ -107,42 +107,29 @@ export class Dashboard implements OnInit {
     return Math.round((count / max) * 100);
   }
 
-  getSessionsTotal(): number {
-    const d = this.chartsData();
-    if (!d) return 0;
-    return (
-      d.sessionsByStatus.completed +
-      d.sessionsByStatus.cancelled +
-      d.sessionsByStatus.disputed
-    );
-  }
-
   getCompletedPercent(): number {
-    const total = this.getSessionsTotal();
-    if (total === 0) return 0;
-    return Math.round(
-      ((this.chartsData()?.sessionsByStatus.completed ?? 0) / total) * 100,
-    );
+    return this.chartsData()?.sessionsByStatus.completed.percentage ?? 0;
   }
 
   getCancelledPercent(): number {
-    const total = this.getSessionsTotal();
-    if (total === 0) return 0;
-    return Math.round(
-      ((this.chartsData()?.sessionsByStatus.cancelled ?? 0) / total) * 100,
-    );
+    return this.chartsData()?.sessionsByStatus.cancelled.percentage ?? 0;
   }
 
   getDisputedPercent(): number {
-    const total = this.getSessionsTotal();
-    if (total === 0) return 0;
-    return Math.round(
-      ((this.chartsData()?.sessionsByStatus.disputed ?? 0) / total) * 100,
-    );
+    return this.chartsData()?.sessionsByStatus.disputed.percentage ?? 0;
   }
 
   formatNumber(value: number | undefined): string {
     if (value === undefined) return '0';
     return value.toLocaleString();
+  }
+
+  changeLabel(value: number | undefined): string {
+    if (value === undefined) return '0%';
+    return `${Math.abs(value)}% vs last week`;
+  }
+
+  isPositive(value: number | undefined): boolean {
+    return (value ?? 0) >= 0;
   }
 }

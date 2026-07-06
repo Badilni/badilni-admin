@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { forkJoin, Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { DashboardStats } from '../models/dashboard-stats';
@@ -17,16 +17,20 @@ export interface SessionsOverview {
   count: number;
 }
 
-export interface SessionsByStatus {
-  completed: number;
-  cancelled: number;
-  disputed: number;
+export interface SessionsByStatusEntry {
+  count: number;
+  percentage: number;
 }
+
+export type SessionsByStatus = Record<
+  'pending' | 'accepted' | 'declined' | 'completed' | 'disputed' | 'cancelled',
+  SessionsByStatusEntry
+>;
 
 export interface CreditFlow {
   date: string;
-  income: number;
-  outcome: number;
+  creditsIn: number;
+  creditsOut: number;
 }
 
 export interface ChartsData {
@@ -39,28 +43,44 @@ export interface ChartsData {
   providedIn: 'root',
 })
 export class Dashboard {
-  private readonly apiUrl = `${environment.apiUrl}`;
+  // ⚠️ Endpoint moved: booking.admin module now provides dashboard data,
+  // replacing the old (never-implemented) /admin/dashboard/* endpoints.
+  private readonly apiUrl = `${environment.apiUrl}/admin/bookings`;
 
   constructor(private http: HttpClient) {}
 
   getStats(): Observable<DashboardStats> {
     return this.http
-      .get<DashboardStatsResponse>(`${this.apiUrl}/admin/dashboard/stats`)
+      .get<DashboardStatsResponse>(`${this.apiUrl}/stats`)
       .pipe(
         map((res) => res.data.stats),
         catchError(this.handleError),
       );
   }
 
-  getChartsData(): Observable<ChartsData> {
-    return this.http
-      .get<{ status: string; data: ChartsData }>(
-        `${this.apiUrl}/admin/dashboard/charts`,
-      )
-      .pipe(
-        map((res) => res.data),
-        catchError(this.handleError),
-      );
+  getChartsData(days = 7): Observable<ChartsData> {
+    const params = new HttpParams().set('days', days);
+
+    return forkJoin({
+      overview: this.http.get<{ status: string; data: { overview: SessionsOverview[] } }>(
+        `${this.apiUrl}/overview`,
+        { params },
+      ),
+      byStatus: this.http.get<{ status: string; data: { byStatus: SessionsByStatus } }>(
+        `${this.apiUrl}/by-status`,
+      ),
+      creditFlow: this.http.get<{ status: string; data: { creditFlow: CreditFlow[] } }>(
+        `${this.apiUrl}/credit-flow`,
+        { params },
+      ),
+    }).pipe(
+      map(({ overview, byStatus, creditFlow }) => ({
+        sessionsOverview: overview.data.overview,
+        sessionsByStatus: byStatus.data.byStatus,
+        creditFlow: creditFlow.data.creditFlow,
+      })),
+      catchError(this.handleError),
+    );
   }
 
   private handleError(error: unknown): Observable<never> {

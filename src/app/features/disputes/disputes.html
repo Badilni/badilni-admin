@@ -21,7 +21,7 @@
         <input
           class="search-input"
           type="text"
-          placeholder="Search by booking, provider, or requester..."
+          placeholder="Search by booking, provider, or receiver..."
           [value]="searchKeyword()"
           (input)="onSearch($any($event.target).value)"
         />
@@ -57,8 +57,8 @@
             <thead>
               <tr>
                 <th>Booking ID</th>
-                <th>Provider ID</th>
-                <th>Requester ID</th>
+                <th>Provider</th>
+                <th>Receiver</th>
                 <th>Amount (TC)</th>
                 <th>Date</th>
                 <th>Status</th>
@@ -69,9 +69,9 @@
               @for (dispute of disputes(); track dispute._id) {
                 <tr [class.row--selected]="selectedDispute()?._id === dispute._id">
                   <td class="td-id">#{{ dispute._id }}</td>
-                  <td class="td-ref">#{{ dispute.provider }}</td>
-                  <td class="td-ref">#{{ dispute.requester }}</td>
-                  <td>{{ dispute.creditsAmount }} TC</td>
+                  <td class="td-ref">{{ dispute.provider }}</td>
+                  <td class="td-ref">{{ dispute.receiver }}</td>
+                  <td>{{ dispute.creditsTotal }} TC</td>
                   <td>{{ dispute.createdAt }}</td>
                   <td>
                     <span class="badge badge--disputed">Disputed</span>
@@ -226,19 +226,19 @@
           </div>
           <div class="detail-item">
             <span class="detail-label">Provider</span>
-            <span class="detail-value">#{{ selectedDispute()?.provider }}</span>
+            <span class="detail-value">{{ selectedDispute()?.provider }}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-label">Requester</span>
-            <span class="detail-value">#{{ selectedDispute()?.requester }}</span>
+            <span class="detail-label">Receiver</span>
+            <span class="detail-value">{{ selectedDispute()?.receiver }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Listing</span>
-            <span class="detail-value">#{{ selectedDispute()?.listing }}</span>
+            <span class="detail-value">{{ selectedDispute()?.listing }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Amount (TC)</span>
-            <span class="detail-value">{{ selectedDispute()?.creditsAmount }} TC</span>
+            <span class="detail-value">{{ selectedDispute()?.creditsTotal }} TC</span>
           </div>
           <div class="detail-item detail-item--full">
             <span class="detail-label">Date</span>

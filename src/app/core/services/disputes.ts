@@ -4,25 +4,18 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Booking } from '../models/booking';
+import {
+  mapBookingFromApi,
+  normalizePagination,
+  NormalizedPagination,
+} from '../mappers/api-mappers';
 
 export interface DisputesResponse {
   status: string;
   data: {
     disputes: Booking[];
   };
-  pagination: {
-    page: number;
-    limit: number;
-    totalCount: number;
-    totalPages: number;
-  };
-}
-
-export interface DisputeResponse {
-  status: string;
-  data: {
-    dispute: Booking;
-  };
+  pagination: NormalizedPagination;
 }
 
 export interface ResolveDisputePayload {
@@ -33,15 +26,16 @@ export interface ResolveDisputePayload {
 export interface DisputesQueryParams {
   page?: number;
   limit?: number;
-  sort?: string;
+  bookingId?: string;
+  providerId?: string;
+  receiverId?: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class Disputes {
-  // ⚠️ BACKEND NOT READY: /api/v1/disputes admin endpoint not yet implemented
-  private readonly apiUrl = `${environment.apiUrl}/disputes`;
+  private readonly apiUrl = `${environment.apiUrl}/admin/bookings`;
 
   constructor(private http: HttpClient) {}
 
@@ -49,21 +43,35 @@ export class Disputes {
     let httpParams = new HttpParams();
     if (params.page) httpParams = httpParams.set('page', params.page);
     if (params.limit) httpParams = httpParams.set('limit', params.limit);
-    if (params.sort) httpParams = httpParams.set('sort', params.sort);
+    if (params.bookingId) httpParams = httpParams.set('bookingId', params.bookingId);
+    if (params.providerId) httpParams = httpParams.set('providerId', params.providerId);
+    if (params.receiverId) httpParams = httpParams.set('receiverId', params.receiverId);
 
     return this.http
-      .get<DisputesResponse>(this.apiUrl, { params: httpParams })
-      .pipe(catchError(this.handleError));
+      .get<{
+        status: string;
+        data: { bookings: Record<string, unknown>[] };
+        pagination: Record<string, number>;
+      }>(`${this.apiUrl}/disputes`, { params: httpParams })
+      .pipe(
+        map((res) => ({
+          status: res.status,
+          data: { disputes: res.data.bookings.map(mapBookingFromApi) },
+          pagination: normalizePagination(res.pagination),
+        })),
+        catchError(this.handleError),
+      );
   }
 
-  resolve(
-    bookingId: string,
-    payload: ResolveDisputePayload,
-  ): Observable<Booking> {
+  // ⚠️ BACKEND NOT READY: booking.admin.service.ts 
+  resolve(bookingId: string, payload: ResolveDisputePayload): Observable<Booking> {
     return this.http
-      .patch<DisputeResponse>(`${this.apiUrl}/${bookingId}/resolve`, payload)
+      .patch<{ status: string; data: { booking: Record<string, unknown> } }>(
+        `${this.apiUrl}/${bookingId}/resolve`,
+        payload,
+      )
       .pipe(
-        map((res) => res.data.dispute),
+        map((res) => mapBookingFromApi(res.data.booking)),
         catchError(this.handleError),
       );
   }

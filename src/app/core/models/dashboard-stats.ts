@@ -1,10 +1,11 @@
 export interface DashboardStats {
-  totalUsers?: number;
-  totalListings?: number;
-  totalTransactions?: number;
-  totalRevenue?: number;
-  activeDisputes?: number;
-  newUsersToday?: number;
-  completedBookingsToday?: number;
-  pendingBookings?: number;
+  sessionsThisWeek: number;
+  sessionsThisWeekChange: number;
+  openDisputes: number;
+  openDisputesChange: number;
+  pendingBookings: number;
+  pendingBookingsChange: number;
+  totalCreditsInCirculation: number;
+  totalCreditsInEscrow: number;
+  creditCirculationChange: number;
 }

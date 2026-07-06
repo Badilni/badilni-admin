@@ -26,6 +26,13 @@ export interface TransactionsQueryParams {
   sort?: string;
 }
 
+export interface AdminAdjustmentPayload {
+  userId: string;
+  // Positive amount credits the user's wallet, negative deducts from it
+  amount: number;
+  description: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -52,6 +59,19 @@ export class Transactions {
           data: { transactions: res.data.transactions.map(mapTransactionFromApi) },
           pagination: normalizePagination(res.pagination),
         })),
+        catchError(this.handleError),
+      );
+  }
+
+  // Admin-only credit adjustment — maps to POST /api/v1/transactions/admin
+  adminAdjustment(payload: AdminAdjustmentPayload): Observable<Transaction> {
+    return this.http
+      .post<{ status: string; data: { transaction: Record<string, unknown> } }>(
+        this.apiUrl,
+        payload,
+      )
+      .pipe(
+        map((res) => mapTransactionFromApi(res.data.transaction)),
         catchError(this.handleError),
       );
   }

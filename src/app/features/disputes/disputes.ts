@@ -35,13 +35,63 @@ export class Disputes implements OnInit {
   readonly limit = 10;
 
   private readonly mockDisputes: Booking[] = [
-    { _id: 'BK5-7P3A', provider: 'PRV-1045', requester: 'USR-2311', listing: 'LST-001', creditsAmount: 150, status: 'disputed', createdAt: '2025-05-31' },
-    { _id: 'BKI-Q290', provider: 'PRV-987', requester: 'USR-1456', listing: 'LST-002', creditsAmount: 200, status: 'disputed', createdAt: '2025-05-13' },
-    { _id: 'BK8-B418', provider: 'PRV-555', requester: 'USR-3322', listing: 'LST-003', creditsAmount: 150, status: 'disputed', createdAt: '2025-05-13' },
-    { _id: 'BK9-4D5E', provider: 'PRV-322', requester: 'USR-7768', listing: 'LST-004', creditsAmount: 250, status: 'disputed', createdAt: '2025-05-13' },
-    { _id: 'BK0-9F8C', provider: 'PRV-333', requester: 'USR-8899', listing: 'LST-005', creditsAmount: 180, status: 'disputed', createdAt: '2025-05-13' },
+    {
+      _id: 'BK5-7P3A',
+      provider: 'Provider A',
+      receiver: 'User 2311',
+      listing: 'Graphic Design',
+      creditsTotal: 150,
+      durationHours: 1,
+      scheduledAt: '2025-06-05T10:00:00Z',
+      status: 'disputed',
+      createdAt: '2025-05-31',
+    },
+    {
+      _id: 'BKI-Q290',
+      provider: 'Provider B',
+      receiver: 'User 1456',
+      listing: 'Web Development',
+      creditsTotal: 200,
+      durationHours: 2,
+      scheduledAt: '2025-05-20T14:00:00Z',
+      status: 'disputed',
+      createdAt: '2025-05-13',
+    },
+    {
+      _id: 'BK8-B418',
+      provider: 'Provider C',
+      receiver: 'User 3322',
+      listing: 'English Conversation',
+      creditsTotal: 150,
+      durationHours: 1,
+      scheduledAt: '2025-05-22T09:30:00Z',
+      status: 'disputed',
+      createdAt: '2025-05-13',
+    },
+    {
+      _id: 'BK9-4D5E',
+      provider: 'Provider D',
+      receiver: 'User 7768',
+      listing: 'Digital Marketing',
+      creditsTotal: 250,
+      durationHours: 2,
+      scheduledAt: '2025-05-24T16:00:00Z',
+      status: 'disputed',
+      createdAt: '2025-05-13',
+    },
+    {
+      _id: 'BK0-9F8C',
+      provider: 'Provider E',
+      receiver: 'User 8899',
+      listing: 'Photo Editing',
+      creditsTotal: 180,
+      durationHours: 1,
+      scheduledAt: '2025-05-26T11:15:00Z',
+      status: 'disputed',
+      createdAt: '2025-05-13',
+    },
   ];
-
+  
   readonly resolutions: { value: ResolveDisputePayload['resolution']; label: string }[] = [
     { value: 'favor_provider', label: 'Favor Provider' },
     { value: 'favor_receiver', label: 'Favor Receiver' },
@@ -85,7 +135,7 @@ export class Disputes implements OnInit {
     const keyword = this.searchKeyword();
     if (keyword) {
       filtered = filtered.filter((d) =>
-        matchesKeyword(keyword, [d._id, d.provider, d.requester, d.listing]),
+        matchesKeyword(keyword, [d._id, d.provider, d.receiver, d.listing]),
       );
     }
 

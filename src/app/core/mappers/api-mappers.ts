@@ -2,6 +2,7 @@ import { User } from '../models/user';
 import { Listing } from '../models/listing';
 import { Transaction } from '../models/transaction';
 import { Category } from '../models/category';
+import { Booking } from '../models/booking';
 
 export interface NormalizedPagination {
   page: number;
@@ -152,6 +153,43 @@ export function mapCategoryFromApi(raw: Record<string, unknown>): Category {
     icon: '📁',
     order: 0,
     active: true,
+    createdAt: raw['createdAt'] as string | undefined,
+    updatedAt: raw['updatedAt'] as string | undefined,
+  };
+}
+
+
+export function mapBookingFromApi(raw: Record<string, unknown>): Booking {
+  const resolveParty = (party: unknown): string => {
+    if (party === null || party === undefined) return '';
+    if (typeof party === 'object') {
+      const obj = party as Record<string, unknown>;
+      return String(obj['name'] ?? obj['_id'] ?? '');
+    }
+    return String(party);
+  };
+
+  const resolveTitle = (item: unknown): string | undefined => {
+    if (!item) return undefined;
+    if (typeof item === 'object') {
+      const obj = item as Record<string, unknown>;
+      return String(obj['title'] ?? obj['_id'] ?? '');
+    }
+    return String(item);
+  };
+
+  return {
+    _id: String(raw['_id'] ?? ''),
+    provider: resolveParty(raw['provider']),
+    receiver: resolveParty(raw['receiver']),
+    listing: resolveTitle(raw['listing']),
+    request: resolveTitle(raw['request']),
+    scheduledAt: raw['scheduledAt'] ? String(raw['scheduledAt']) : '',
+    durationHours: Number(raw['durationHours'] ?? 0),
+    creditsTotal: Number(raw['creditsTotal'] ?? 0),
+    status: raw['status'] as Booking['status'],
+    providerConfirmed: Boolean(raw['providerConfirmed']),
+    receiverConfirmed: Boolean(raw['receiverConfirmed']),
     createdAt: raw['createdAt'] as string | undefined,
     updatedAt: raw['updatedAt'] as string | undefined,
   };

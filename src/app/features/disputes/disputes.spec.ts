@@ -7,10 +7,11 @@ import { Booking } from '../../core/models/booking';
 
 const mockBooking: Booking = {
   _id: 'BK5-7P3A',
-  provider: 'PRV-1045',
-  requester: 'USR-2311',
-  listing: 'LST-001',
-  creditsAmount: 150,
+  provider: 'Provider A',
+  receiver: 'User 2311',
+  listing: 'Graphic Design',
+  creditsTotal: 150,
+  durationHours: 1,
   status: 'disputed',
   createdAt: '2025-05-31',
 };

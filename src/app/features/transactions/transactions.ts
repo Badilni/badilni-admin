@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import {
   Transactions as TransactionsService,
   TransactionsQueryParams,
+  AdminAdjustmentPayload,
 } from '../../core/services/transactions';
 import { Transaction } from '../../core/models/transaction';
 import { matchesKeyword, paginateItems } from '../../shared/utils/mock-data';
@@ -30,6 +31,16 @@ export class Transactions implements OnInit {
   usingMock = signal(false);
   showViewModal = signal(false);
   selectedTransaction = signal<Transaction | null>(null);
+
+  // New Admin Adjustment modal state
+  showAdjustModal = signal(false);
+  adjustLoading = signal(false);
+  adjustError = signal('');
+  adjustForm = signal<AdminAdjustmentPayload>({
+    userId: '',
+    amount: 0,
+    description: '',
+  });
 
   private readonly mockTransactions: Transaction[] = [
     { _id: 'TXI-9F00TA', sender: 'Ahmed Samir', receiver: 'Sara Ali', amount: 150, type: 'session_payment', status: 'completed', createdAt: '2025-05-20 14:30' },
@@ -140,6 +151,79 @@ export class Transactions implements OnInit {
   closeViewModal(): void {
     this.showViewModal.set(false);
     this.selectedTransaction.set(null);
+  }
+
+  // ── Admin Adjustment ──
+
+  openAdjustModal(): void {
+    this.adjustForm.set({ userId: '', amount: 0, description: '' });
+    this.adjustError.set('');
+    this.showAdjustModal.set(true);
+  }
+
+  closeAdjustModal(): void {
+    this.showAdjustModal.set(false);
+  }
+
+  updateAdjustForm(field: keyof AdminAdjustmentPayload, value: string | number): void {
+    this.adjustForm.update((prev) => ({ ...prev, [field]: value }));
+  }
+
+  onSubmitAdjustment(): void {
+    const data = this.adjustForm();
+    this.adjustError.set('');
+
+    if (!data.userId.trim()) {
+      this.adjustError.set('User ID is required.');
+      return;
+    }
+    if (!data.amount || Number(data.amount) === 0) {
+      this.adjustError.set('Amount must be a non-zero number.');
+      return;
+    }
+    if (!data.description.trim() || data.description.trim().length < 5) {
+      this.adjustError.set('Description must be at least 5 characters.');
+      return;
+    }
+
+    this.adjustLoading.set(true);
+
+    this.transactionsService
+      .adminAdjustment({
+        userId: data.userId.trim(),
+        amount: Number(data.amount),
+        description: data.description.trim(),
+      })
+      .subscribe({
+        next: () => {
+          this.adjustLoading.set(false);
+          this.closeAdjustModal();
+          this.loadTransactions();
+        },
+        error: (err) => {
+          if (this.usingMock()) {
+            const newTx: Transaction = {
+              _id: `TXI-${Date.now()}`,
+              sender: 'Admin',
+              receiver: `#${data.userId}`,
+              amount: Math.abs(Number(data.amount)),
+              type: 'admin_adjustment',
+              status: 'completed',
+              description: data.description,
+              createdAt: new Date().toLocaleString(),
+            };
+            this.mockTransactions.unshift(newTx);
+            this.adjustLoading.set(false);
+            this.closeAdjustModal();
+            this.applyMockFilter();
+          } else {
+            this.adjustLoading.set(false);
+            this.adjustError.set(
+              err?.error?.message ?? 'Failed to apply adjustment. Please try again.',
+            );
+          }
+        },
+      });
   }
 
   getPages(): number[] {

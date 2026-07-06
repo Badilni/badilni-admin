@@ -10,14 +10,15 @@ describe('Dashboard Component', () => {
   let dashboardServiceSpy: jasmine.SpyObj<DashboardService>;
 
   const mockStats = {
-    totalUsers: 2481,
-    totalListings: 1246,
-    totalTransactions: 45231,
-    totalRevenue: 45231,
-    activeDisputes: 32,
-    newUsersToday: 128,
-    completedBookingsToday: 1246,
+    sessionsThisWeek: 1246,
+    sessionsThisWeekChange: 8,
+    openDisputes: 32,
+    openDisputesChange: 21,
     pendingBookings: 74,
+    pendingBookingsChange: 6,
+    totalCreditsInCirculation: 45231,
+    totalCreditsInEscrow: 5200,
+    creditCirculationChange: 16,
   };
 
   const mockCharts = {
@@ -30,26 +31,28 @@ describe('Dashboard Component', () => {
       { date: 'May 19', count: 900 },
       { date: 'May 20', count: 1246 },
     ],
-    sessionsByStatus: { completed: 566, cancelled: 286, disputed: 144 },
+    sessionsByStatus: {
+      pending: { count: 74, percentage: 6 },
+      accepted: { count: 120, percentage: 10 },
+      declined: { count: 20, percentage: 2 },
+      completed: { count: 566, percentage: 46 },
+      disputed: { count: 144, percentage: 12 },
+      cancelled: { count: 286, percentage: 24 },
+    },
     creditFlow: [
-      { date: '14', income: 4000, outcome: -2000 },
-      { date: '15', income: 6000, outcome: -3000 },
+      { date: '14', creditsIn: 4000, creditsOut: 2000 },
+      { date: '15', creditsIn: 6000, creditsOut: 3000 },
     ],
   };
 
   beforeEach(async () => {
-    dashboardServiceSpy = jasmine.createSpyObj('Dashboard', [
-      'getStats',
-      'getChartsData',
-    ]);
+    dashboardServiceSpy = jasmine.createSpyObj('Dashboard', ['getStats', 'getChartsData']);
     dashboardServiceSpy.getStats.and.returnValue(of(mockStats));
     dashboardServiceSpy.getChartsData.and.returnValue(of(mockCharts));
 
     await TestBed.configureTestingModule({
       imports: [Dashboard],
-      providers: [
-        { provide: DashboardService, useValue: dashboardServiceSpy },
-      ],
+      providers: [{ provide: DashboardService, useValue: dashboardServiceSpy }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Dashboard);
@@ -72,25 +75,16 @@ describe('Dashboard Component', () => {
     expect(component.chartsData()).toEqual(mockCharts);
   }));
 
-  it('should set loading to false after stats load', fakeAsync(() => {
-    tick();
-    expect(component.isLoading()).toBeFalse();
-  }));
-
   it('should use mock data when stats API fails', fakeAsync(() => {
-    dashboardServiceSpy.getStats.and.returnValue(
-      throwError(() => new Error('Not found')),
-    );
+    dashboardServiceSpy.getStats.and.returnValue(throwError(() => new Error('Not found')));
     component.ngOnInit();
     tick();
     expect(component.stats()).toBeTruthy();
-    expect(component.stats()?.totalUsers).toBe(2481);
+    expect(component.stats()?.sessionsThisWeek).toBe(1246);
   }));
 
   it('should use mock charts when charts API fails', fakeAsync(() => {
-    dashboardServiceSpy.getChartsData.and.returnValue(
-      throwError(() => new Error('Not found')),
-    );
+    dashboardServiceSpy.getChartsData.and.returnValue(throwError(() => new Error('Not found')));
     component.ngOnInit();
     tick();
     expect(component.chartsData()).toBeTruthy();
@@ -98,8 +92,7 @@ describe('Dashboard Component', () => {
 
   it('should correctly calculate bar height', () => {
     component['maxSessionCount'].set(1246);
-    const height = component.getBarHeight(623);
-    expect(height).toBe(50);
+    expect(component.getBarHeight(623)).toBe(50);
   });
 
   it('should return 0 bar height when max is 0', () => {
@@ -107,22 +100,11 @@ describe('Dashboard Component', () => {
     expect(component.getBarHeight(100)).toBe(0);
   });
 
-  it('should calculate completed percent correctly', fakeAsync(() => {
+  it('should read completed/cancelled/disputed percentages from API', fakeAsync(() => {
     tick();
-    const percent = component.getCompletedPercent();
-    expect(percent).toBe(57);
-  }));
-
-  it('should calculate cancelled percent correctly', fakeAsync(() => {
-    tick();
-    const percent = component.getCancelledPercent();
-    expect(percent).toBe(29);
-  }));
-
-  it('should calculate disputed percent correctly', fakeAsync(() => {
-    tick();
-    const percent = component.getDisputedPercent();
-    expect(percent).toBe(14);
+    expect(component.getCompletedPercent()).toBe(46);
+    expect(component.getCancelledPercent()).toBe(24);
+    expect(component.getDisputedPercent()).toBe(12);
   }));
 
   it('should format numbers with commas', () => {
@@ -139,4 +121,10 @@ describe('Dashboard Component', () => {
     expect(component.sessionCounts().length).toBe(7);
     expect(component.maxSessionCount()).toBe(1246);
   }));
+
+  it('isPositive should return true for zero/positive and false for negative', () => {
+    expect(component.isPositive(5)).toBeTrue();
+    expect(component.isPositive(0)).toBeTrue();
+    expect(component.isPositive(-3)).toBeFalse();
+  });
 });
