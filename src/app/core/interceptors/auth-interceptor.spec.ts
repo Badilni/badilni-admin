@@ -104,4 +104,82 @@ describe('authInterceptor', () => {
     expect(retryReq.request.headers.get('Authorization')).toBe('Bearer new-token');
     retryReq.flush({});
   });
+
+  it('should attempt token refresh on a 500 response carrying a JsonWebTokenError name', () => {
+    authService.getToken.and.returnValue('bad-token');
+    authService.refreshToken.and.returnValue(
+      of({ status: 'success', accessToken: 'new-token', data: { user: {} as any } })
+    );
+
+    httpClient.get(`${environment.apiUrl}/admin/bookings/stats`).subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/admin/bookings/stats`);
+    req.flush(
+      { status: 'error', message: 'jwt malformed', name: 'JsonWebTokenError' },
+      { status: 500, statusText: 'Internal Server Error' },
+    );
+
+    const retryReq = httpMock.expectOne(`${environment.apiUrl}/admin/bookings/stats`);
+    expect(retryReq.request.headers.get('Authorization')).toBe('Bearer new-token');
+    retryReq.flush({});
+  });
+
+  it('should attempt token refresh on a 500 response carrying a TokenExpiredError name', () => {
+    authService.getToken.and.returnValue('expired-token');
+    authService.refreshToken.and.returnValue(
+      of({ status: 'success', accessToken: 'new-token', data: { user: {} as any } })
+    );
+
+    httpClient.get(`${environment.apiUrl}/transactions/admin`).subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/transactions/admin`);
+    req.flush(
+      { status: 'error', message: 'jwt expired', name: 'TokenExpiredError' },
+      { status: 500, statusText: 'Internal Server Error' },
+    );
+
+    const retryReq = httpMock.expectOne(`${environment.apiUrl}/transactions/admin`);
+    expect(retryReq.request.headers.get('Authorization')).toBe('Bearer new-token');
+    retryReq.flush({});
+  });
+
+  it('should NOT attempt token refresh on a 500 response unrelated to auth', () => {
+    authService.getToken.and.returnValue('valid-token');
+
+    httpClient.get(`${environment.apiUrl}/categories`).subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/categories`);
+    req.flush(
+      { status: 'error', message: 'Something went wrong!' },
+      { status: 500, statusText: 'Internal Server Error' },
+    );
+
+    expect(authService.refreshToken).not.toHaveBeenCalled();
+  });
+
+  it('should NOT attempt token refresh on a 404 response', () => {
+    authService.getToken.and.returnValue('valid-token');
+
+    httpClient.get(`${environment.apiUrl}/admin/audit-log`).subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/admin/audit-log`);
+    req.flush({ message: 'Not Found' }, { status: 404, statusText: 'Not Found' });
+
+    expect(authService.refreshToken).not.toHaveBeenCalled();
+  });
+
+  it('should navigate to login when refresh also fails after a JWT-like 500', () => {
+    authService.getToken.and.returnValue('bad-token');
+    authService.refreshToken.and.returnValue(
+      throwError(() => new Error('Refresh failed')),
+    );
+
+    httpClient.get(`${environment.apiUrl}/users`).subscribe({ error: () => {} });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/users`);
+    req.flush(
+      { status: 'error', message: 'jwt expired', name: 'TokenExpiredError' },
+      { status: 500, statusText: 'Internal Server Error' },
+    );
+  });
 });
