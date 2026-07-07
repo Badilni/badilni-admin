@@ -392,6 +392,11 @@
   gap: 0.4rem;
 }
 
+.error-message {
+  font-size: 0.78rem;
+  color: var(--danger);
+}
+
 .form-label {
   font-size: 0.82rem;
   font-weight: 600;

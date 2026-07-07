@@ -1,3 +1,4 @@
+// src/app/core/interceptors/auth-interceptor.spec.ts
 import { TestBed } from '@angular/core/testing';
 import {
   HttpClientTestingModule,
@@ -14,7 +15,8 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { authInterceptor } from './auth-interceptor';
 import { Auth } from '../services/auth';
 import { environment } from '../../../environments/environment';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
+import { AuthResponse } from '../models/auth-response';
 
 describe('authInterceptor', () => {
   const interceptor: HttpInterceptorFn = (req, next) =>
@@ -181,5 +183,67 @@ describe('authInterceptor', () => {
       { status: 'error', message: 'jwt expired', name: 'TokenExpiredError' },
       { status: 500, statusText: 'Internal Server Error' },
     );
+  });
+
+  // ── Concurrency: only one refresh call for simultaneous auth failures ──
+
+  it('should only call refreshToken once when multiple requests fail with an auth error at the same time', () => {
+    authService.getToken.and.returnValue('expired-token');
+
+    const refreshSubject = new Subject<AuthResponse>();
+    authService.refreshToken.and.returnValue(refreshSubject.asObservable());
+
+    httpClient.get(`${environment.apiUrl}/users`).subscribe();
+    httpClient.get(`${environment.apiUrl}/categories`).subscribe();
+
+    const req1 = httpMock.expectOne(`${environment.apiUrl}/users`);
+    const req2 = httpMock.expectOne(`${environment.apiUrl}/categories`);
+
+    // Both requests fail with an auth-related error before the refresh
+    // resolves - this is the "several parallel calls, one expired token"
+    // scenario (e.g. the dashboard's forkJoin).
+    req1.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+    req2.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+
+    expect(authService.refreshToken).toHaveBeenCalledTimes(1);
+
+    refreshSubject.next({
+      status: 'success',
+      accessToken: 'shared-token',
+      data: { user: {} as any },
+    });
+    refreshSubject.complete();
+
+    const retry1 = httpMock.expectOne(`${environment.apiUrl}/users`);
+    const retry2 = httpMock.expectOne(`${environment.apiUrl}/categories`);
+
+    expect(retry1.request.headers.get('Authorization')).toBe('Bearer shared-token');
+    expect(retry2.request.headers.get('Authorization')).toBe('Bearer shared-token');
+
+    retry1.flush({});
+    retry2.flush({});
+  });
+
+  it('should call refreshToken again for a new auth failure after a previous refresh has settled', () => {
+    authService.getToken.and.returnValue('expired-token');
+    authService.refreshToken.and.returnValues(
+      of({ status: 'success', accessToken: 'first-token', data: { user: {} as any } }),
+      of({ status: 'success', accessToken: 'second-token', data: { user: {} as any } }),
+    );
+
+    httpClient.get(`${environment.apiUrl}/users`).subscribe();
+    const req1 = httpMock.expectOne(`${environment.apiUrl}/users`);
+    req1.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+    const retry1 = httpMock.expectOne(`${environment.apiUrl}/users`);
+    retry1.flush({});
+
+    httpClient.get(`${environment.apiUrl}/categories`).subscribe();
+    const req2 = httpMock.expectOne(`${environment.apiUrl}/categories`);
+    req2.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+    const retry2 = httpMock.expectOne(`${environment.apiUrl}/categories`);
+    expect(retry2.request.headers.get('Authorization')).toBe('Bearer second-token');
+    retry2.flush({});
+
+    expect(authService.refreshToken).toHaveBeenCalledTimes(2);
   });
 });

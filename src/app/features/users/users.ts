@@ -1,3 +1,4 @@
+// src/app/features/users/users.ts
 import { Component, OnInit, signal } from '@angular/core';
 import { DecimalPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -46,6 +47,9 @@ export class Users implements OnInit {
     status: 'active',
   });
   formPassword = signal('');
+  // Mirrors the backend's `passwordSchema` (auth.schema.ts) so a create
+  // attempt never reaches the API with a password that Zod will reject.
+  formPasswordError = signal('');
 
   roles = ['All Roles', 'user', 'admin'];
   statusOptions: User['status'][] = ['active', 'suspended', 'inactive'];
@@ -156,6 +160,7 @@ export class Users implements OnInit {
     this.isEditMode.set(false);
     this.formData.set({ name: '', email: '', role: 'user', status: 'active' });
     this.formPassword.set('');
+    this.formPasswordError.set('');
     this.showEditModal.set(true);
   }
 
@@ -177,6 +182,19 @@ export class Users implements OnInit {
 
   closeEditModal(): void {
     this.showEditModal.set(false);
+  }
+
+  // Matches the backend's passwordSchema (min 8 chars + upper + lower +
+  // number + special character). Keeping this in sync prevents create-user
+  // requests from ever being rejected by the API's Zod validation.
+  private isPasswordStrongEnough(password: string): boolean {
+    return (
+      password.length >= 8 &&
+      /[A-Z]/.test(password) &&
+      /[a-z]/.test(password) &&
+      /[0-9]/.test(password) &&
+      /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    );
   }
 
   onSave(): void {
@@ -207,10 +225,14 @@ export class Users implements OnInit {
         },
       });
     } else {
-      if (!this.formPassword().trim() || this.formPassword().length < 8) {
+      if (!this.isPasswordStrongEnough(this.formPassword())) {
+        this.formPasswordError.set(
+          'Password must be 8+ characters and include an uppercase letter, a lowercase letter, a number, and a special character.',
+        );
         this.modalLoading.set(false);
         return;
       }
+      this.formPasswordError.set('');
 
       this.usersService.create({
         name: data.name!,

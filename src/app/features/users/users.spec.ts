@@ -108,4 +108,25 @@ describe('Users Component', () => {
     tick();
     expect(usersServiceSpy.delete).toHaveBeenCalledWith('USR-001');
   }));
+
+  // ── Password complexity (matches backend passwordSchema) ──
+  it('should block create and set formPasswordError when password is too weak', () => {
+    component.openCreateModal();
+    component.formData.set({ name: 'New User', email: 'new@user.com', role: 'user', status: 'active' });
+    component.formPassword.set('weakpass');
+    component.onSave();
+    expect(component.formPasswordError()).toBeTruthy();
+    expect(usersServiceSpy.create).not.toHaveBeenCalled();
+  });
+
+  it('should call create when password meets the backend complexity requirements', fakeAsync(() => {
+    usersServiceSpy.create.and.returnValue(of({ _id: 'USR-999' } as any));
+    component.openCreateModal();
+    component.formData.set({ name: 'New User', email: 'new@user.com', role: 'user', status: 'active' });
+    component.formPassword.set('Str0ng!Pass');
+    component.onSave();
+    tick();
+    expect(component.formPasswordError()).toBe('');
+    expect(usersServiceSpy.create).toHaveBeenCalled();
+  }));
 });
