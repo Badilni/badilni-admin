@@ -3,6 +3,8 @@ import { Listing } from '../models/listing';
 import { Transaction } from '../models/transaction';
 import { Category } from '../models/category';
 import { Booking } from '../models/booking';
+import { AdminAction } from '../models/admin-action';
+import { Notification } from '../models/notification';
 
 export interface NormalizedPagination {
   page: number;
@@ -190,6 +192,68 @@ export function mapBookingFromApi(raw: Record<string, unknown>): Booking {
     status: raw['status'] as Booking['status'],
     providerConfirmed: Boolean(raw['providerConfirmed']),
     receiverConfirmed: Boolean(raw['receiverConfirmed']),
+    createdAt: raw['createdAt'] as string | undefined,
+    updatedAt: raw['updatedAt'] as string | undefined,
+  };
+}
+
+// Backend now populates `admin` with { _id, name, email } on the audit-log
+// endpoint (admin.service.ts -> getAuditLog), instead of a raw ObjectId
+// string. Resolve it to a display name here, the same way mapTransactionFromApi
+// resolves fromUser/toUser, so the AdminAction model can stay a plain string.
+export function mapAdminActionFromApi(raw: Record<string, unknown>): AdminAction {
+  const admin = raw['admin'];
+  let adminDisplay = '';
+  if (typeof admin === 'object' && admin !== null) {
+    const obj = admin as Record<string, unknown>;
+    adminDisplay = String(obj['name'] ?? obj['_id'] ?? '');
+  } else if (admin) {
+    adminDisplay = String(admin);
+  }
+
+  return {
+    _id: String(raw['_id'] ?? ''),
+    admin: adminDisplay,
+    action: String(raw['action'] ?? ''),
+    targetModel: raw['targetModel'] as string | undefined,
+    targetId: raw['targetId'] ? String(raw['targetId']) : undefined,
+    details: (raw['details'] as Record<string, unknown> | null) ?? undefined,
+    createdAt: raw['createdAt'] as string | undefined,
+  };
+}
+
+function mapNotificationUiType(backendType: string): Notification['type'] {
+  const map: Record<string, Notification['type']> = {
+    ADMIN_ANNOUNCEMENT: 'system',
+    DISPUTE_FILED: 'warning',
+    CREDITS_WELCOME_BONUS: 'info',
+    BOOKING_COMPLETED: 'success',
+    CREDITS_ADMIN_ADJUSTMENT: 'info',
+    CREDITS_REFUNDED: 'info',
+    CREDITS_RELEASED: 'success',
+  };
+
+  return map[backendType] ?? 'info';
+}
+
+export function mapNotificationFromApi(raw: Record<string, unknown>): Notification {
+  const backendType = String(raw['type'] ?? '');
+
+  const user = raw['user'];
+  let userId: string | undefined;
+  if (typeof user === 'object' && user !== null) {
+    userId = String((user as Record<string, unknown>)['_id'] ?? '');
+  } else if (user) {
+    userId = String(user);
+  }
+
+  return {
+    _id: String(raw['_id'] ?? ''),
+    title: String(raw['title'] ?? ''),
+    message: String(raw['body'] ?? raw['message'] ?? ''),
+    type: mapNotificationUiType(backendType),
+    target: backendType === 'ADMIN_ANNOUNCEMENT' ? 'broadcast' : 'user',
+    userId,
     createdAt: raw['createdAt'] as string | undefined,
     updatedAt: raw['updatedAt'] as string | undefined,
   };

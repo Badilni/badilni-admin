@@ -117,7 +117,16 @@ export class Disputes implements OnInit {
       .getAll({ page: this.currentPage(), limit: this.limit })
       .subscribe({
         next: (res) => {
-          this.disputes.set(res.data.disputes);
+          let disputes = res.data.disputes;
+
+          const keyword = this.searchKeyword();
+          if (keyword) {
+            disputes = disputes.filter((d) =>
+              matchesKeyword(keyword, [d._id, d.provider, d.receiver, d.listing]),
+            );
+          }
+
+          this.disputes.set(disputes);
           this.totalPages.set(res.pagination.totalPages);
           this.isLoading.set(false);
         },

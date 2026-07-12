@@ -7,21 +7,25 @@ import { authGuard } from './auth-guard';
 import { Auth } from '../services/auth';
 
 describe('authGuard', () => {
+  let isLoggedInSignal = signal(false);
+  let router: Router;
+
   const executeGuard: CanActivateFn = (...guardParameters) =>
     TestBed.runInInjectionContext(() => authGuard(...guardParameters));
 
-  let authServiceSpy: jasmine.SpyObj<Auth>;
-  let router: Router;
-
   beforeEach(() => {
-    const isLoggedInSignal = signal(false);
-    authServiceSpy = jasmine.createSpyObj('Auth', ['getToken'], {
-      isLoggedIn: isLoggedInSignal,
-    });
+    isLoggedInSignal = signal(false);
 
     TestBed.configureTestingModule({
       imports: [RouterTestingModule],
-      providers: [{ provide: Auth, useValue: authServiceSpy }],
+      providers: [
+        {
+          provide: Auth,
+          useValue: {
+            isLoggedIn: isLoggedInSignal,
+          },
+        },
+      ],
     });
 
     router = TestBed.inject(Router);
@@ -32,25 +36,17 @@ describe('authGuard', () => {
   });
 
   it('should allow activation when user is logged in', () => {
-    (authServiceSpy as any).isLoggedIn = signal(true);
+    isLoggedInSignal.set(true);
 
-    const result = executeGuard(
-      {} as any,
-      { url: '/dashboard' } as any,
-    );
-
+    const result = executeGuard({} as any, { url: '/dashboard' } as any);
     expect(result).toBeTrue();
   });
 
   it('should block activation and redirect to login when not logged in', () => {
     spyOn(router, 'navigate');
-    (authServiceSpy as any).isLoggedIn = signal(false);
+    isLoggedInSignal.set(false);
 
-    const result = executeGuard(
-      {} as any,
-      { url: '/dashboard' } as any,
-    );
-
+    const result = executeGuard({} as any, { url: '/dashboard' } as any);
     expect(result).toBeFalse();
     expect(router.navigate).toHaveBeenCalledWith(
       ['/auth/login'],
@@ -60,7 +56,7 @@ describe('authGuard', () => {
 
   it('should pass returnUrl as query param when blocking access', () => {
     spyOn(router, 'navigate');
-    (authServiceSpy as any).isLoggedIn = signal(false);
+    isLoggedInSignal.set(false);
 
     executeGuard({} as any, { url: '/users/123' } as any);
 

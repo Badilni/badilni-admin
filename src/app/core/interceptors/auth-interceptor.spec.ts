@@ -1,8 +1,8 @@
 // src/app/core/interceptors/auth-interceptor.spec.ts
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
-  HttpClientTestingModule,
   HttpTestingController,
+  provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import {
   HttpClient,
@@ -12,7 +12,7 @@ import {
 } from '@angular/common/http';
 import { RouterTestingModule } from '@angular/router/testing';
 
-import { authInterceptor } from './auth-interceptor';
+import { authInterceptor, AuthRefreshCoordinator } from './auth-interceptor';
 import { Auth } from '../services/auth';
 import { environment } from '../../../environments/environment';
 import { of, throwError, Subject } from 'rxjs';
@@ -31,12 +31,21 @@ describe('authInterceptor', () => {
       isLoggedIn: { set: jasmine.createSpy() },
       currentUser: { set: jasmine.createSpy() },
     });
+    spy.refreshToken.and.returnValue(
+      of({ status: 'success', accessToken: 'new-token', data: { user: {} as any } }),
+    );
 
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, RouterTestingModule],
+      imports: [RouterTestingModule],
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting(),
         { provide: Auth, useValue: spy },
+        {
+          provide: AuthRefreshCoordinator,
+          useFactory: (auth: Auth) => new AuthRefreshCoordinator(auth),
+          deps: [Auth],
+        },
       ],
     });
 
@@ -224,7 +233,7 @@ describe('authInterceptor', () => {
     retry2.flush({});
   });
 
-  it('should call refreshToken again for a new auth failure after a previous refresh has settled', () => {
+  it('should call refreshToken again for a new auth failure after a previous refresh has settled', fakeAsync(() => {
     authService.getToken.and.returnValue('expired-token');
     authService.refreshToken.and.returnValues(
       of({ status: 'success', accessToken: 'first-token', data: { user: {} as any } }),
@@ -236,6 +245,7 @@ describe('authInterceptor', () => {
     req1.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
     const retry1 = httpMock.expectOne(`${environment.apiUrl}/users`);
     retry1.flush({});
+    tick();
 
     httpClient.get(`${environment.apiUrl}/categories`).subscribe();
     const req2 = httpMock.expectOne(`${environment.apiUrl}/categories`);
@@ -245,5 +255,5 @@ describe('authInterceptor', () => {
     retry2.flush({});
 
     expect(authService.refreshToken).toHaveBeenCalledTimes(2);
-  });
+  }));
 });

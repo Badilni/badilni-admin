@@ -63,7 +63,9 @@ export class Disputes {
       );
   }
 
-  // ⚠️ BACKEND NOT READY: booking.admin.service.ts 
+  // ✅ Backend ready: PATCH /api/v1/admin/bookings/:id/resolve
+  // (booking.routes.ts -> adminBookingController.resolveDispute), validated
+  // against resolveDisputeSchema { resolution, reason } — matches this payload.
   resolve(bookingId: string, payload: ResolveDisputePayload): Observable<Booking> {
     return this.http
       .patch<{ status: string; data: { booking: Record<string, unknown> } }>(

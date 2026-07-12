@@ -10,7 +10,7 @@ const mockTx: Transaction = {
   sender: 'USR-2311',
   receiver: 'PRV-1045',
   amount: 150,
-  type: 'debit',
+  type: 'session_payment',
   status: 'completed',
   createdAt: '2025-05-20',
 };
@@ -81,34 +81,34 @@ describe('Transactions Component', () => {
   }));
 
   it('should return correct type badge classes', () => {
-    expect(component.getTypeClass('credit')).toContain('type-badge--green');
-    expect(component.getTypeClass('debit')).toContain('type-badge--blue');
-    expect(component.getTypeClass('escrow_hold')).toContain('type-badge--orange');
-    expect(component.getTypeClass('escrow_release')).toContain('type-badge--teal');
+    expect(component.getTypeClass('session_payment')).toContain('type-badge--blue');
+    expect(component.getTypeClass('escrow_lock')).toContain('type-badge--orange');
     expect(component.getTypeClass('refund')).toContain('type-badge--purple');
+    expect(component.getTypeClass('welcome_bonus')).toContain('type-badge--green');
+    expect(component.getTypeClass('admin_adjustment')).toContain('type-badge--teal');
   });
 
-  it('should identify debit and escrow_hold as outgoing types', () => {
-    expect(component.isOutgoing('debit')).toBeTrue();
-    expect(component.isOutgoing('escrow_hold')).toBeTrue();
+  it('should identify session_payment and escrow_lock as outgoing types', () => {
+    expect(component.isOutgoing('session_payment')).toBeTrue();
+    expect(component.isOutgoing('escrow_lock')).toBeTrue();
   });
 
-  it('should identify credit, refund, escrow_release as incoming types', () => {
-    expect(component.isOutgoing('credit')).toBeFalse();
+  it('should identify refund and welcome_bonus as incoming types', () => {
     expect(component.isOutgoing('refund')).toBeFalse();
-    expect(component.isOutgoing('escrow_release')).toBeFalse();
+    expect(component.isOutgoing('welcome_bonus')).toBeFalse();
+    expect(component.isOutgoing('admin_adjustment')).toBeFalse();
   });
 
   it('should return negative amount class for outgoing types', () => {
-    expect(component.getAmountClass('debit')).toContain('amount--negative');
+    expect(component.getAmountClass('session_payment')).toContain('amount--negative');
   });
 
   it('should return positive amount class for incoming types', () => {
-    expect(component.getAmountClass('credit')).toContain('amount--positive');
+    expect(component.getAmountClass('refund')).toContain('amount--positive');
   });
 
   it('should format amounts with minus sign for outgoing types', () => {
-    expect(component.formatAmount(150, 'debit')).toBe('-150 TC');
+    expect(component.formatAmount(150, 'session_payment')).toBe('-150 TC');
   });
 
   it('should format amounts with plus sign for incoming types', () => {

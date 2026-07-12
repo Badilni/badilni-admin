@@ -77,7 +77,22 @@ export class AuditLog implements OnInit {
 
     this.auditLogService.getAll(params).subscribe({
       next: (res) => {
-        this.logs.set(res.data.logs);
+        let logs = res.data.logs;
+
+        const keyword = this.searchKeyword();
+        if (keyword) {
+          logs = logs.filter((l) =>
+            matchesKeyword(keyword, [
+              l._id,
+              l.admin,
+              l.targetId,
+              l.action,
+              this.formatDetails(l.details),
+            ]),
+          );
+        }
+
+        this.logs.set(logs);
         this.totalPages.set(res.pagination.totalPages);
         this.totalCount.set(res.pagination.totalCount);
         this.isLoading.set(false);

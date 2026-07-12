@@ -65,14 +65,30 @@ export class Notifications implements OnInit {
 
     this.isLoading.set(true);
 
-    const params: Record<string, unknown> = {};
-    if (this.selectedType() && this.selectedType() !== 'All Types') {
-      params['type'] = this.selectedType();
-    }
+    const params: { page?: number; limit?: number } = {
+      page: 1,
+      limit: 50,
+    };
 
     this.notificationsService.getAll(params).subscribe({
       next: (res) => {
-        this.notifications.set(res.data.notifications);
+        let notifications = res.data.notifications;
+
+        const keyword = this.searchKeyword().trim().toLowerCase();
+        if (keyword) {
+          notifications = notifications.filter(
+            (n) =>
+              n.title.toLowerCase().includes(keyword) ||
+              n.message.toLowerCase().includes(keyword),
+          );
+        }
+
+        const type = this.selectedType();
+        if (type && type !== 'All Types') {
+          notifications = notifications.filter((n) => n.type === type);
+        }
+
+        this.notifications.set(notifications);
         this.isLoading.set(false);
       },
       error: () => {

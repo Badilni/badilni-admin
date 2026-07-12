@@ -8,8 +8,8 @@ const mockUsersResponse = {
   status: 'success',
   data: {
     users: [
-      { _id: 'USR-001', name: 'Ahmed Samir', email: 'ahmed@example.com', role: 'user', walletBalance: 1250, totalSessionsCompleted: 24, status: 'active', isVerified: true },
-      { _id: 'USR-002', name: 'Sara Ali', email: 'sara@example.com', role: 'user', walletBalance: 3210, totalSessionsCompleted: 56, status: 'active', isVerified: true },
+      { _id: 'USR-001', name: 'Ahmed Samir', email: 'ahmed@example.com', role: 'user' as const, walletBalance: 1250, totalSessionsCompleted: 24, status: 'active' as const, isVerified: true },
+      { _id: 'USR-002', name: 'Sara Ali', email: 'sara@example.com', role: 'user' as const, walletBalance: 3210, totalSessionsCompleted: 56, status: 'active' as const, isVerified: true },
     ],
   },
   pagination: { page: 1, limit: 10, totalCount: 2, totalPages: 1 },

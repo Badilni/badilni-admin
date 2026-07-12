@@ -4,25 +4,19 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Notification } from '../models/notification';
+import {
+  mapNotificationFromApi,
+  normalizePagination,
+  NormalizedPagination,
+} from '../mappers/api-mappers';
 
 export interface NotificationsResponse {
   status: string;
+  unreadCount?: number;
   data: {
     notifications: Notification[];
   };
-  pagination: {
-    page: number;
-    limit: number;
-    totalCount: number;
-    totalPages: number;
-  };
-}
-
-export interface NotificationResponse {
-  status: string;
-  data: {
-    notification: Notification;
-  };
+  pagination: NormalizedPagination;
 }
 
 export interface SendNotificationPayload {
@@ -36,15 +30,13 @@ export interface SendNotificationPayload {
 export interface NotificationsQueryParams {
   page?: number;
   limit?: number;
-  type?: string;
-  sort?: string;
+  unreadOnly?: boolean;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class NotificationsService {
-  // ⚠️ BACKEND NOT READY: /api/v1/notifications admin endpoint not yet implemented
   private readonly apiUrl = `${environment.apiUrl}/notifications`;
 
   constructor(private http: HttpClient) {}
@@ -53,19 +45,41 @@ export class NotificationsService {
     let httpParams = new HttpParams();
     if (params.page) httpParams = httpParams.set('page', params.page);
     if (params.limit) httpParams = httpParams.set('limit', params.limit);
-    if (params.type) httpParams = httpParams.set('type', params.type);
-    if (params.sort) httpParams = httpParams.set('sort', params.sort);
+    if (params.unreadOnly) httpParams = httpParams.set('unreadOnly', 'true');
 
     return this.http
-      .get<NotificationsResponse>(this.apiUrl, { params: httpParams })
-      .pipe(catchError(this.handleError));
+      .get<{
+        status: string;
+        unreadCount?: number;
+        data: { notifications: Record<string, unknown>[] };
+        pagination: Record<string, number>;
+      }>(this.apiUrl, { params: httpParams })
+      .pipe(
+        map((res) => ({
+          status: res.status,
+          unreadCount: res.unreadCount,
+          data: {
+            notifications: res.data.notifications.map(mapNotificationFromApi),
+          },
+          pagination: normalizePagination(res.pagination),
+        })),
+        catchError(this.handleError),
+      );
   }
 
   send(payload: SendNotificationPayload): Observable<Notification> {
     return this.http
-      .post<NotificationResponse>(this.apiUrl, payload)
+      .post<{
+        status: string;
+        data: { notification: Record<string, unknown>; count: number };
+      }>(this.apiUrl, {
+        title: payload.title,
+        message: payload.message,
+        target: payload.target,
+        userId: payload.userId,
+      })
       .pipe(
-        map((res) => res.data.notification),
+        map((res) => mapNotificationFromApi(res.data.notification)),
         catchError(this.handleError),
       );
   }

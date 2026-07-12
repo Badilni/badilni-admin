@@ -84,7 +84,16 @@ export class Transactions implements OnInit {
 
     this.transactionsService.getAll(params).subscribe({
       next: (res) => {
-        this.transactions.set(res.data.transactions);
+        let transactions = res.data.transactions;
+
+        const keyword = this.searchKeyword();
+        if (keyword) {
+          transactions = transactions.filter((t) =>
+            matchesKeyword(keyword, [t._id, t.sender, t.receiver, t.type]),
+          );
+        }
+
+        this.transactions.set(transactions);
         this.totalPages.set(res.pagination.totalPages);
         this.totalCount.set(res.pagination.totalCount);
         this.isLoading.set(false);

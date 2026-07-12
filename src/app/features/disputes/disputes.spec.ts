@@ -12,6 +12,7 @@ const mockBooking: Booking = {
   listing: 'Graphic Design',
   creditsTotal: 150,
   durationHours: 1,
+  scheduledAt: '2025-06-05T10:00:00Z',
   status: 'disputed',
   createdAt: '2025-05-31',
 };

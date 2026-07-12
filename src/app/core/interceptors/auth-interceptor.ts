@@ -54,23 +54,23 @@ const isAuthRelatedError = (error: HttpErrorResponse): boolean => {
  * something that wasn't a genuine auth failure.
  */
 @Injectable({ providedIn: 'root' })
-class AuthRefreshCoordinator {
+export class AuthRefreshCoordinator {
   private pendingRefresh: Observable<string> | null = null;
 
   constructor(private authService: Auth) {}
 
   refresh(): Observable<string> {
     if (!this.pendingRefresh) {
-      this.pendingRefresh = this.authService.refreshToken().pipe(
+      const refresh$ = this.authService.refreshToken().pipe(
         map((res: AuthResponse) => res.accessToken),
         shareReplay(1),
       );
 
-      // Free the slot once this refresh settles (success or failure) so a
-      // later, genuinely new expiry can trigger a fresh refresh call.
-      this.pendingRefresh.subscribe({
-        complete: () => (this.pendingRefresh = null),
-        error: () => (this.pendingRefresh = null),
+      this.pendingRefresh = refresh$;
+
+      refresh$.subscribe({
+        complete: () => queueMicrotask(() => (this.pendingRefresh = null)),
+        error: () => queueMicrotask(() => (this.pendingRefresh = null)),
       });
     }
 

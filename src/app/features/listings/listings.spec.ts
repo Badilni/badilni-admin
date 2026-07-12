@@ -8,8 +8,8 @@ const mockListingsResponse = {
   status: 'success',
   data: {
     listings: [
-      { _id: 'LST-001', title: 'Graphic Design Basics', provider: 'PRV-1045', price: 200, tags: ['Design'], status: 'active' },
-      { _id: 'LST-002', title: 'Web Development', provider: 'PRV-987', price: 500, tags: ['Programming'], status: 'active' },
+      { _id: 'LST-001', title: 'Graphic Design Basics', provider: 'PRV-1045', price: 200, tags: ['Design'], status: 'active' as const },
+      { _id: 'LST-002', title: 'Web Development', provider: 'PRV-987', price: 500, tags: ['Programming'], status: 'active' as const },
     ],
   },
   pagination: { page: 1, limit: 10, totalCount: 2, totalPages: 1 },

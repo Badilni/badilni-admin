@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
+import { signal } from '@angular/core';
+
 import { Sidebar } from './sidebar';
+import { Auth } from '../../../core/services/auth';
 
 describe('Sidebar', () => {
   let component: Sidebar;
@@ -9,6 +12,15 @@ describe('Sidebar', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Sidebar, RouterModule.forRoot([])],
+      providers: [
+        {
+          provide: Auth,
+          useValue: {
+            currentUser: signal({ name: 'Admin', email: 'admin@test.com', role: 'admin' }),
+            logout: jasmine.createSpy('logout').and.returnValue({ subscribe: () => {} }),
+          },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Sidebar);

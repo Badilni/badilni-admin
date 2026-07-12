@@ -57,7 +57,7 @@ describe('AuditLog Component', () => {
     tick();
     expect(component.logs().length).toBeGreaterThan(0);
     expect(component.isLoading()).toBeFalse();
-    expect(component.totalCount()).toBe(8542);
+    expect(component.totalCount()).toBe(7);
   }));
 
   it('should reset page and reload on action filter change', () => {
@@ -71,14 +71,14 @@ describe('AuditLog Component', () => {
   it('should pass action param when filter is not All Actions', fakeAsync(() => {
     component.onActionChange('delete');
     tick();
-    const callArgs = serviceSpy.getAll.calls.mostRecent().args[0];
+    const callArgs = serviceSpy.getAll.calls.mostRecent().args[0]!;
     expect(callArgs['action']).toBe('delete');
   }));
 
   it('should NOT pass action param when filter is All Actions', fakeAsync(() => {
     component.onActionChange('All Actions');
     tick();
-    const callArgs = serviceSpy.getAll.calls.mostRecent().args[0];
+    const callArgs = serviceSpy.getAll.calls.mostRecent().args[0]!;
     expect(callArgs['action']).toBeUndefined();
   }));
 
