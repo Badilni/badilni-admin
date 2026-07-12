@@ -115,7 +115,7 @@
         </table>
       </div>
 
-      @if (totalPages() > 1) {
+      @if (totalPages() >= 1) {
         <div class="pagination">
           <button class="page-btn" (click)="onPageChange(currentPage() - 1)" [disabled]="currentPage() === 1" type="button">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

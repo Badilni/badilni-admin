@@ -77,11 +77,11 @@ export function mapListingFromApi(raw: Record<string, unknown>): Listing {
   }
 
   const category = raw['category'];
-  let categoryName = '';
+  let categoryId = '';
   if (typeof category === 'object' && category !== null) {
-    categoryName = String((category as Record<string, unknown>)['name'] ?? (category as Record<string, unknown>)['_id'] ?? '');
+    categoryId = String((category as Record<string, unknown>)['_id'] ?? (category as Record<string, unknown>)['name'] ?? '');
   } else if (category) {
-    categoryName = String(category);
+    categoryId = String(category);
   }
 
   const isActive = raw['isActive'] !== false;
@@ -93,7 +93,7 @@ export function mapListingFromApi(raw: Record<string, unknown>): Listing {
     price: Number(raw['hourlyRate'] ?? 0),
     tags: (raw['tags'] as string[]) ?? [],
     status: isActive ? 'active' : 'inactive',
-    category: categoryName,
+    category: categoryId,
     description: raw['description'] as string | undefined,
     createdAt: raw['createdAt'] as string | undefined,
     updatedAt: raw['updatedAt'] as string | undefined,
@@ -152,9 +152,9 @@ export function mapCategoryFromApi(raw: Record<string, unknown>): Category {
     _id: String(raw['_id'] ?? ''),
     name: String(raw['name'] ?? ''),
     slug: String(raw['slug'] ?? ''),
-    icon: '📁',
-    order: 0,
-    active: true,
+    icon: raw['icon'] !== undefined ? String(raw['icon']) : '📁',
+    order: raw['order'] !== undefined ? Number(raw['order']) : 0,
+    active: raw['active'] !== false,
     createdAt: raw['createdAt'] as string | undefined,
     updatedAt: raw['updatedAt'] as string | undefined,
   };

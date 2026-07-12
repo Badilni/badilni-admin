@@ -68,8 +68,15 @@ export class Categories {
   }
 
   create(data: Partial<Category>): Observable<Category> {
+    const payload = {
+      name: data.name,
+      slug: data.slug,
+      icon: data.icon,
+      order: data.order,
+      active: data.active,
+    };
     return this.http
-      .post<{ status: string; data: { category: Record<string, unknown> } }>(this.apiUrl, { name: data.name })
+      .post<{ status: string; data: { category: Record<string, unknown> } }>(this.apiUrl, payload)
       .pipe(
         map((res) => mapCategoryFromApi(res.data.category)),
         catchError(this.handleError),
@@ -77,11 +84,15 @@ export class Categories {
   }
 
   update(id: string, data: Partial<Category>): Observable<Category> {
-    const body: Record<string, string> = {};
-    if (data.name) body['name'] = data.name;
+    const payload: Record<string, any> = {};
+    if (data.name !== undefined) payload['name'] = data.name;
+    if (data.slug !== undefined) payload['slug'] = data.slug;
+    if (data.icon !== undefined) payload['icon'] = data.icon;
+    if (data.order !== undefined) payload['order'] = data.order;
+    if (data.active !== undefined) payload['active'] = data.active;
 
     return this.http
-      .patch<{ status: string; data: { category: Record<string, unknown> } }>(`${this.apiUrl}/${id}`, body)
+      .patch<{ status: string; data: { category: Record<string, unknown> } }>(`${this.apiUrl}/${id}`, payload)
       .pipe(
         map((res) => mapCategoryFromApi(res.data.category)),
         catchError(this.handleError),

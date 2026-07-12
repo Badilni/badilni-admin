@@ -653,12 +653,25 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .card-section {
+    margin-right: 3rem;
+  }
+}
+
 @media (max-width: 900px) {
   .branding-section { display: none; }
-  .card-section { flex: 1; }
+  .card-section {
+    flex: 1;
+    margin-right: 0;
+    padding: 1.5rem;
+  }
+  .login-card {
+    margin: 0 auto;
+  }
 }
 
 @media (max-width: 480px) {
   .login-card { padding: 2rem 1.5rem 1.75rem; }
-  .card-section { padding: 1rem; }
+  .card-section { padding: 1rem; margin-right: 0; }
 }

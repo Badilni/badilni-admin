@@ -67,6 +67,10 @@ export class Categories implements OnInit {
       limit: this.limit,
     };
 
+    if (this.searchKeyword()) {
+      params.keyword = this.searchKeyword();
+    }
+
     this.categoriesService.getAll(params).subscribe({
       next: (res) => {
         this.categories.set(res.data.categories);

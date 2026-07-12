@@ -200,7 +200,6 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn--ghost" (click)="closeModal()" type="button">Close</button>
-        <button class="btn btn--primary" (click)="closeModal(); openEditModal(selectedListing()!)" type="button">Edit Listing</button>
       </div>
     </div>
   </div>
@@ -226,10 +225,14 @@
             (input)="updateForm('title', $any($event.target).value)" />
         </div>
         <div class="form-group">
-          <label class="form-label">Category ID</label>
-          <input class="form-input" type="text" placeholder="MongoDB category ObjectId"
-            [value]="formData().category ?? ''"
-            (input)="updateForm('category', $any($event.target).value)" />
+          <label class="form-label">Category</label>
+          <select class="form-select" [value]="formData().category ?? ''"
+            (change)="updateForm('category', $any($event.target).value)">
+            <option value="">Select Category</option>
+            @for (cat of categoriesList(); track cat._id) {
+              <option [value]="cat._id">{{ cat.name }}</option>
+            }
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">Hourly Rate (TC)</label>
@@ -243,21 +246,33 @@
             [value]="tagsInput()"
             (input)="tagsInput.set($any($event.target).value)" />
         </div>
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <select class="form-select" [value]="formData().status ?? 'active'"
-            (change)="updateForm('status', $any($event.target).value)">
-            @for (status of statuses.slice(1); track status) {
-              <option [value]="status">{{ status | titlecase }}</option>
-            }
-          </select>
-        </div>
+        @if (modalMode() !== 'edit') {
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-select" [value]="formData().status ?? 'active'"
+              (change)="updateForm('status', $any($event.target).value)">
+              @for (status of statuses.slice(1); track status) {
+                <option [value]="status">{{ status | titlecase }}</option>
+              }
+            </select>
+          </div>
+        }
         <div class="form-group">
           <label class="form-label">Description</label>
           <textarea class="form-textarea" placeholder="Listing description..." rows="3"
             [value]="formData().description ?? ''"
             (input)="updateForm('description', $any($event.target).value)"></textarea>
         </div>
+        @if (formError()) {
+          <div class="alert-error" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: var(--backgDangerOpacity, rgba(239, 68, 68, 0.08)); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; color: var(--danger); font-size: 0.85rem; margin-top: 0.5rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {{ formError() }}
+          </div>
+        }
       </div>
       <div class="modal-footer">
         <button class="btn btn--ghost" (click)="closeModal()" type="button">Cancel</button>

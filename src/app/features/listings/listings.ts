@@ -2,6 +2,8 @@ import { Component, OnInit, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Listings as ListingsService, ListingsQueryParams } from '../../core/services/listings';
+import { Categories as CategoriesService } from '../../core/services/categories';
+import { Category } from '../../core/models/category';
 import { Listing } from '../../core/models/listing';
 import { matchesKeyword, paginateItems } from '../../shared/utils/mock-data';
 
@@ -42,7 +44,7 @@ export class Listings implements OnInit {
   formData = signal<Partial<Listing>>({
     title: '',
     provider: '',
-    price: 0,
+    price: 1,
     tags: [],
     status: 'active',
     description: '',
@@ -50,11 +52,17 @@ export class Listings implements OnInit {
   tagsInput = signal('');
 
   statuses = ['All Status', 'active', 'inactive'];
+  categoriesList = signal<Category[]>([]);
+  formError = signal('');
 
-  constructor(private listingsService: ListingsService) {}
+  constructor(
+    private listingsService: ListingsService,
+    private categoriesService: CategoriesService
+  ) {}
 
   ngOnInit(): void {
     this.loadListings();
+    this.loadCategoriesList();
   }
 
   loadListings(): void {
@@ -134,7 +142,16 @@ export class Listings implements OnInit {
     this.loadListings();
   }
 
+  loadCategoriesList(): void {
+    this.categoriesService.getAll({ limit: 100 }).subscribe({
+      next: (res) => {
+        this.categoriesList.set(res.data.categories);
+      },
+    });
+  }
+
   openCreateModal(): void {
+    this.formError.set('');
     this.formData.set({ title: '', provider: '', price: 1, tags: [], status: 'active', description: '', category: '' });
     this.tagsInput.set('');
     this.modalMode.set('create');
@@ -146,6 +163,7 @@ export class Listings implements OnInit {
   }
 
   openEditModal(listing: Listing): void {
+    this.formError.set('');
     this.formData.set({ ...listing });
     this.tagsInput.set((listing.tags ?? []).join(', '));
     this.modalMode.set('edit');
@@ -158,8 +176,33 @@ export class Listings implements OnInit {
 
   onSave(): void {
     const data = this.formData();
-    if (!data.title?.trim()) return;
-    if (this.modalMode() === 'create' && (!data.category?.trim() || !data.description?.trim() || data.description.length < 20)) {
+    this.formError.set('');
+
+    if (!data.title?.trim()) {
+      this.formError.set('Title is required');
+      return;
+    }
+    if (data.title.length < 5) {
+      this.formError.set('Title must be at least 5 characters');
+      return;
+    }
+
+    if (!data.category?.trim()) {
+      this.formError.set('Category is required');
+      return;
+    }
+
+    if (!data.description?.trim()) {
+      this.formError.set('Description is required');
+      return;
+    }
+    if (data.description.length < 20) {
+      this.formError.set('Description must be at least 20 characters');
+      return;
+    }
+
+    if (data.price === undefined || data.price < 1 || data.price > 20) {
+      this.formError.set('Hourly rate must be between 1 and 20');
       return;
     }
 
@@ -179,16 +222,10 @@ export class Listings implements OnInit {
           this.closeModal();
           this.loadListings();
         },
-        error: () => {
-          if (this.usingMock()) {
-            const idx = this.mockListings.findIndex((l) => l._id === data._id);
-            if (idx >= 0) this.mockListings[idx] = { ...this.mockListings[idx], ...data } as Listing;
-            this.modalLoading.set(false);
-            this.closeModal();
-            this.applyMockFilter();
-          } else {
-            this.modalLoading.set(false);
-          }
+        error: (err) => {
+          this.modalLoading.set(false);
+          const errMsg = err?.error?.message || 'Failed to update listing';
+          this.formError.set(errMsg);
         },
       });
     } else if (mode === 'create') {
@@ -198,24 +235,10 @@ export class Listings implements OnInit {
           this.closeModal();
           this.loadListings();
         },
-        error: () => {
-          if (this.usingMock()) {
-            const newListing: Listing = {
-              _id: `LST-${Date.now()}`,
-              title: data.title!,
-              provider: data.provider!,
-              price: data.price ?? 0,
-              tags: data.tags,
-              status: data.status ?? 'active',
-              description: data.description,
-            };
-            this.mockListings.unshift(newListing);
-            this.modalLoading.set(false);
-            this.closeModal();
-            this.applyMockFilter();
-          } else {
-            this.modalLoading.set(false);
-          }
+        error: (err) => {
+          this.modalLoading.set(false);
+          const errMsg = err?.error?.message || 'Failed to create listing';
+          this.formError.set(errMsg);
         },
       });
     }
