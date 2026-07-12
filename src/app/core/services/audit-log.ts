@@ -18,8 +18,9 @@ export interface AuditLogResponse {
   pagination: NormalizedPagination;
 }
 
-// Matches auditLogQuerySchema (admin.schema.ts): page, limit, action, admin,
-// targetId. There is no `sort` param on the backend for this endpoint.
+// Matches adminActionQuerySchema (adminAction.schema.ts): page, limit,
+// action, admin, targetId. There is no `sort` param on the backend for
+// this endpoint.
 export interface AuditLogQueryParams {
   page?: number;
   limit?: number;
@@ -32,8 +33,10 @@ export interface AuditLogQueryParams {
   providedIn: 'root',
 })
 export class AuditLog {
-  // ✅ Backend ready: GET /api/v1/admin/audit-log (admin.routes.ts)
-  private readonly apiUrl = `${environment.apiUrl}/admin/audit-log`;
+  // ✅ Backend ready: GET /api/v1/admin-actions (adminAction.routes.ts).
+  // The endpoint moved from /admin/audit-log to /admin-actions, but the
+  // response shape (status/data.logs/pagination) is unchanged.
+  private readonly apiUrl = `${environment.apiUrl}/admin-actions`;
 
   constructor(private http: HttpClient) {}
 

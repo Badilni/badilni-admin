@@ -5,7 +5,7 @@ import { Listings as ListingsService, ListingsQueryParams } from '../../core/ser
 import { Categories as CategoriesService } from '../../core/services/categories';
 import { Category } from '../../core/models/category';
 import { Listing } from '../../core/models/listing';
-import { matchesKeyword, paginateItems } from '../../shared/utils/mock-data';
+import { matchesAnyWord, paginateItems } from '../../shared/utils/mock-data';
 
 type ModalMode = 'create' | 'edit' | 'view' | null;
 
@@ -72,14 +72,49 @@ export class Listings implements OnInit {
     }
 
     this.isLoading.set(true);
+
+    const keyword = this.searchKeyword().trim();
+    const statusFilter =
+      this.selectedStatus() && this.selectedStatus() !== 'All Status'
+        ? this.selectedStatus()
+        : undefined;
+
+    if (keyword) {
+      // The backend's full-text search only returns listings matching the
+      // exact search string. To make search show every listing containing
+      // ANY of the searched words, fetch a larger batch (max page size
+      // allowed by the API) and match/paginate on the client instead.
+      const params: ListingsQueryParams = { page: 1, limit: 100 };
+      if (statusFilter) params.status = statusFilter;
+
+      this.listingsService.getAll(params).subscribe({
+        next: (res) => {
+          const filtered = res.data.listings.filter((l) =>
+            matchesAnyWord(keyword, [l.title, l.description, ...(l.tags ?? [])]),
+          );
+          const { data, totalCount, totalPages } = paginateItems(
+            filtered,
+            this.currentPage(),
+            this.limit,
+          );
+          this.listings.set(data);
+          this.totalCount.set(totalCount);
+          this.totalPages.set(totalPages);
+          this.isLoading.set(false);
+        },
+        error: () => {
+          this.usingMock.set(true);
+          this.applyMockFilter();
+        },
+      });
+      return;
+    }
+
     const params: ListingsQueryParams = {
       page: this.currentPage(),
       limit: this.limit,
     };
-    if (this.searchKeyword()) params.keyword = this.searchKeyword();
-    if (this.selectedStatus() && this.selectedStatus() !== 'All Status') {
-      params.status = this.selectedStatus();
-    }
+    if (statusFilter) params.status = statusFilter;
 
     this.listingsService.getAll(params).subscribe({
       next: (res) => {
@@ -103,7 +138,7 @@ export class Listings implements OnInit {
     const keyword = this.searchKeyword();
     if (keyword) {
       filtered = filtered.filter((l) =>
-        matchesKeyword(keyword, [l.title, l.provider, ...(l.tags ?? [])]),
+        matchesAnyWord(keyword, [l.title, l.description, l.provider, ...(l.tags ?? [])]),
       );
     }
 
@@ -220,6 +255,10 @@ export class Listings implements OnInit {
         next: () => {
           this.modalLoading.set(false);
           this.closeModal();
+          // A previously-failed load can leave us stuck reading from mock
+          // data; a successful write proves the real API is reachable, so
+          // make sure the next read goes back to it.
+          this.usingMock.set(false);
           this.loadListings();
         },
         error: (err) => {
@@ -233,6 +272,11 @@ export class Listings implements OnInit {
         next: () => {
           this.modalLoading.set(false);
           this.closeModal();
+          // Same as above: a successful create means the real API works,
+          // so drop any stale mock fallback and jump back to page 1 so the
+          // freshly created listing (sorted newest-first) is visible.
+          this.usingMock.set(false);
+          this.currentPage.set(1);
           this.loadListings();
         },
         error: (err) => {

@@ -8,6 +8,57 @@ import {
 import { Category } from '../../core/models/category';
 import { matchesKeyword, paginateItems } from '../../shared/utils/mock-data';
 
+// The backend's Category model/schema only persists `name` and `slug`
+// (see category.model.ts / category.schema.ts) — it has no fields for
+// `order`, `icon`, or `active`. Since the backend cannot be changed, those
+// three fields are kept locally (per-browser) so editing "Order" or
+// "Status" in the admin actually has a visible, lasting effect instead of
+// silently being dropped by the API.
+const CATEGORY_OVERRIDES_KEY = 'badilni_admin_category_overrides';
+
+interface CategoryOverride {
+  order?: number;
+  active?: boolean;
+  icon?: string;
+}
+
+function readCategoryOverrides(): Record<string, CategoryOverride> {
+  try {
+    const raw = localStorage.getItem(CATEGORY_OVERRIDES_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, CategoryOverride>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeCategoryOverride(id: string, override: CategoryOverride): void {
+  try {
+    const all = readCategoryOverrides();
+    all[id] = { ...all[id], ...override };
+    localStorage.setItem(CATEGORY_OVERRIDES_KEY, JSON.stringify(all));
+  } catch {
+    // ignore storage errors (e.g. private browsing / storage full)
+  }
+}
+
+function removeCategoryOverride(id: string): void {
+  try {
+    const all = readCategoryOverrides();
+    if (id in all) {
+      delete all[id];
+      localStorage.setItem(CATEGORY_OVERRIDES_KEY, JSON.stringify(all));
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function applyCategoryOverride(category: Category): Category {
+  if (!category._id) return category;
+  const override = readCategoryOverrides()[category._id];
+  return override ? { ...category, ...override } : category;
+}
+
 @Component({
   selector: 'app-categories',
   standalone: true,
@@ -73,7 +124,7 @@ export class Categories implements OnInit {
 
     this.categoriesService.getAll(params).subscribe({
       next: (res) => {
-        this.categories.set(res.data.categories);
+        this.categories.set(res.data.categories.map(applyCategoryOverride));
         this.totalPages.set(res.pagination.totalPages);
         this.totalCount.set(res.pagination.totalCount);
         this.isLoading.set(false);
@@ -88,7 +139,7 @@ export class Categories implements OnInit {
   private applyMockFilter(): void {
     this.isLoading.set(true);
 
-    let filtered = [...this.mockCategories];
+    let filtered = this.mockCategories.map(applyCategoryOverride);
     const keyword = this.searchKeyword();
     if (keyword) {
       filtered = filtered.filter((c) =>
@@ -134,13 +185,30 @@ export class Categories implements OnInit {
     this.modalLoading.set(true);
     const data = this.formData();
 
+    // `order`, `icon`, and `active` aren't supported by the backend's
+    // Category schema, so they're persisted locally and merged back in
+    // whenever categories are loaded (see applyCategoryOverride above).
+    const override: CategoryOverride = {
+      order: data.order,
+      active: data.active,
+      icon: data.icon,
+    };
+
     if (this.isEditMode() && data._id) {
-      this.categoriesService.update(data._id, data).subscribe({
-        next: () => { this.modalLoading.set(false); this.closeModal(); this.loadCategories(); },
+      const id = data._id;
+      this.categoriesService.update(id, data).subscribe({
+        next: () => {
+          writeCategoryOverride(id, override);
+          this.usingMock.set(false);
+          this.modalLoading.set(false);
+          this.closeModal();
+          this.loadCategories();
+        },
         error: () => {
           if (this.usingMock()) {
-            const idx = this.mockCategories.findIndex((c) => c._id === data._id);
+            const idx = this.mockCategories.findIndex((c) => c._id === id);
             if (idx >= 0) this.mockCategories[idx] = { ...this.mockCategories[idx], ...data } as Category;
+            writeCategoryOverride(id, override);
             this.modalLoading.set(false);
             this.closeModal();
             this.applyMockFilter();
@@ -151,7 +219,15 @@ export class Categories implements OnInit {
       });
     } else {
       this.categoriesService.create(data).subscribe({
-        next: () => { this.modalLoading.set(false); this.closeModal(); this.loadCategories(); },
+        next: (created) => {
+          if (created._id) {
+            writeCategoryOverride(created._id, override);
+          }
+          this.usingMock.set(false);
+          this.modalLoading.set(false);
+          this.closeModal();
+          this.loadCategories();
+        },
         error: () => {
           if (this.usingMock()) {
             const newCat: Category = {
@@ -163,6 +239,7 @@ export class Categories implements OnInit {
               active: data.active ?? true,
             };
             this.mockCategories.push(newCat);
+            writeCategoryOverride(newCat._id!, override);
             this.modalLoading.set(false);
             this.closeModal();
             this.applyMockFilter();
@@ -177,11 +254,15 @@ export class Categories implements OnInit {
   onDelete(id: string): void {
     if (!confirm('Are you sure you want to delete this category?')) return;
     this.categoriesService.delete(id).subscribe({
-      next: () => this.loadCategories(),
+      next: () => {
+        removeCategoryOverride(id);
+        this.loadCategories();
+      },
       error: () => {
         if (this.usingMock()) {
           const idx = this.mockCategories.findIndex((c) => c._id === id);
           if (idx >= 0) this.mockCategories.splice(idx, 1);
+          removeCategoryOverride(id);
           this.applyMockFilter();
         }
       },

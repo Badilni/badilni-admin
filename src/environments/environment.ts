@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.badilni.com/api/v1',
+  apiUrl: 'https://badilni-backend-production.up.railway.app/api/v1',
 };

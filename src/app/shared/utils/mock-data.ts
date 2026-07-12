@@ -29,3 +29,29 @@ export function matchesKeyword(
   if (!q) return true;
   return fields.some((f) => (f ?? '').toLowerCase().includes(q));
 }
+
+/**
+ * Splits the keyword into individual words and returns true if ANY of the
+ * given fields contains ANY of those words. Used for free-text search
+ * across multiple fields (e.g. title/description/tags) so that a
+ * multi-word query still matches items that only contain some of the
+ * words, instead of requiring the exact phrase as a substring.
+ */
+export function matchesAnyWord(
+  keyword: string,
+  fields: (string | string[] | undefined | null)[],
+): boolean {
+  const words = keyword
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length === 0) return true;
+
+  const haystacks = fields
+    .flatMap((f) => (Array.isArray(f) ? f : [f]))
+    .map((f) => (f ?? '').toLowerCase());
+
+  return words.some((word) => haystacks.some((h) => h.includes(word)));
+}

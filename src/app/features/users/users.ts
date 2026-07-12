@@ -67,14 +67,49 @@ export class Users implements OnInit {
     }
 
     this.isLoading.set(true);
+
+    const keyword = this.searchKeyword().trim();
+    const roleFilter =
+      this.selectedRole() && this.selectedRole() !== 'All Roles'
+        ? this.selectedRole()
+        : undefined;
+
+    if (keyword) {
+      // The backend's `keyword` query param only searches the `name` field.
+      // To also match against email we fetch a larger batch (max page size
+      // allowed by the API) and filter/paginate name-or-email matches on
+      // the client instead of forwarding the keyword to the server.
+      const params: UsersQueryParams = { page: 1, limit: 100 };
+      if (roleFilter) params.role = roleFilter;
+
+      this.usersService.getAll(params).subscribe({
+        next: (res) => {
+          const filtered = res.data.users.filter((u) =>
+            matchesKeyword(keyword, [u.name, u.email]),
+          );
+          const { data, totalCount, totalPages } = paginateItems(
+            filtered,
+            this.currentPage(),
+            this.limit,
+          );
+          this.users.set(data);
+          this.totalCount.set(totalCount);
+          this.totalPages.set(totalPages);
+          this.isLoading.set(false);
+        },
+        error: () => {
+          this.usingMock.set(true);
+          this.applyMockFilter();
+        },
+      });
+      return;
+    }
+
     const params: UsersQueryParams = {
       page: this.currentPage(),
       limit: this.limit,
     };
-    if (this.searchKeyword()) params.keyword = this.searchKeyword();
-    if (this.selectedRole() && this.selectedRole() !== 'All Roles') {
-      params.role = this.selectedRole();
-    }
+    if (roleFilter) params.role = roleFilter;
 
     this.usersService.getAll(params).subscribe({
       next: (res) => {
@@ -204,15 +239,28 @@ export class Users implements OnInit {
     this.modalLoading.set(true);
 
     if (this.isEditMode() && data._id) {
-      this.usersService.update(data._id, data).subscribe({
-        next: () => {
+      const id = data._id;
+      // NOTE: the backend's `getAllUsers` list endpoint only returns users
+      // whose `active` field is not explicitly `false`, so suspending a
+      // user would make them vanish from a fresh `loadUsers()` call. To
+      // keep the row visible after ANY edit (including status changes),
+      // we merge the server's response into the already-loaded list
+      // instead of reloading it from the API.
+      this.usersService.update(id, data).subscribe({
+        next: (updatedUser) => {
           this.modalLoading.set(false);
           this.closeEditModal();
-          this.loadUsers();
+          // The backend never returns the `active` field on read (it's
+          // `select: false` on the schema), so trust the status the user
+          // just submitted rather than whatever came back from the API.
+          const merged: User = { ...updatedUser, status: data.status ?? updatedUser.status };
+          this.users.update((list) =>
+            list.map((u) => (u._id === merged._id ? merged : u)),
+          );
         },
         error: () => {
           if (this.usingMock()) {
-            const idx = this.mockUsers.findIndex((u) => u._id === data._id);
+            const idx = this.mockUsers.findIndex((u) => u._id === id);
             if (idx >= 0) {
               this.mockUsers[idx] = { ...this.mockUsers[idx], ...data } as User;
             }
