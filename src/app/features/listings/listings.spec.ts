@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 
 import { Listings } from './listings';
 import { Listings as ListingsService } from '../../core/services/listings';
+import { Categories as CategoriesService } from '../../core/services/categories';
 
 const mockListingsResponse = {
   status: 'success',
@@ -15,10 +16,17 @@ const mockListingsResponse = {
   pagination: { page: 1, limit: 10, totalCount: 2, totalPages: 1 },
 };
 
+const mockCategoriesResponse = {
+  status: 'success',
+  data: { categories: [] },
+  pagination: { page: 1, limit: 100, totalCount: 0, totalPages: 0 },
+};
+
 describe('Listings Component', () => {
   let component: Listings;
   let fixture: ComponentFixture<Listings>;
   let listingsServiceSpy: jasmine.SpyObj<ListingsService>;
+  let categoriesServiceSpy: jasmine.SpyObj<CategoriesService>;
 
   beforeEach(async () => {
     listingsServiceSpy = jasmine.createSpyObj('ListingsService', ['getAll', 'update', 'delete']);
@@ -26,9 +34,15 @@ describe('Listings Component', () => {
     listingsServiceSpy.update.and.returnValue(of(mockListingsResponse.data.listings[0] as any));
     listingsServiceSpy.delete.and.returnValue(of(undefined));
 
+    categoriesServiceSpy = jasmine.createSpyObj('CategoriesService', ['getAll']);
+    categoriesServiceSpy.getAll.and.returnValue(of(mockCategoriesResponse));
+
     await TestBed.configureTestingModule({
       imports: [Listings],
-      providers: [{ provide: ListingsService, useValue: listingsServiceSpy }],
+      providers: [
+        { provide: ListingsService, useValue: listingsServiceSpy },
+        { provide: CategoriesService, useValue: categoriesServiceSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Listings);

@@ -2,7 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { tap, catchError, map } from 'rxjs/operators';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   AuthResponse,
@@ -169,7 +169,7 @@ export class Auth {
       );
   }
 
-  // Error handler 
+  // Error handler
   private handleError(error: HttpErrorResponse): Observable<never> {
     let message = 'An unexpected error occurred. Please try again.';
 

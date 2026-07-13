@@ -10,7 +10,7 @@ import { environment } from '../../../environments/environment';
 describe('AuditLog Service', () => {
   let service: AuditLog;
   let httpMock: HttpTestingController;
-  const apiUrl = `${environment.apiUrl}/admin/audit-log`;
+  const apiUrl = `${environment.apiUrl}/admin-actions`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -33,7 +33,7 @@ describe('AuditLog Service', () => {
     let result: any;
     service.getAll().subscribe((res) => (result = res));
 
-    const req = httpMock.expectOne((r) => r.url === apiUrl);
+    const req = httpMock.expectOne(apiUrl);
     expect(req.request.method).toBe('GET');
     req.flush({
       status: 'success',
@@ -63,7 +63,7 @@ describe('AuditLog Service', () => {
     let result: any;
     service.getAll().subscribe((res) => (result = res));
 
-    const req = httpMock.expectOne((r) => r.url === apiUrl);
+    const req = httpMock.expectOne(apiUrl);
     req.flush({
       status: 'success',
       data: {
@@ -87,7 +87,7 @@ describe('AuditLog Service', () => {
     let result: any;
     service.getAll().subscribe((res) => (result = res));
 
-    const req = httpMock.expectOne((r) => r.url === apiUrl);
+    const req = httpMock.expectOne(apiUrl);
     req.flush({
       status: 'success',
       data: {
@@ -129,7 +129,7 @@ describe('AuditLog Service', () => {
     let capturedError: any;
     service.getAll().subscribe({ error: (err) => (capturedError = err) });
 
-    const req = httpMock.expectOne((r) => r.url === apiUrl);
+    const req = httpMock.expectOne(apiUrl);
     req.flush({ message: 'Server error' }, { status: 500, statusText: 'Server Error' });
     tick();
 
