@@ -71,15 +71,50 @@ export class NotificationsService {
     return this.http
       .post<{
         status: string;
-        data: { notification: Record<string, unknown>; count: number };
+        data: { notification?: Record<string, unknown>; count?: number };
       }>(this.apiUrl, {
         title: payload.title,
         message: payload.message,
+        // 🐛 FIX: The backend's Notification model defines `type` as a
+        // required enum of real domain events (ADMIN_ANNOUNCEMENT,
+        // DISPUTE_FILED, CREDITS_WELCOME_BONUS, ...) — see
+        // notification.model.ts. Our UI-only categories
+        // ('system' | 'warning' | 'info' | 'success') are NOT valid values
+        // for that enum, so sending `type: payload.type` here was either
+        // silently ignored or overridden by the backend, which is why
+        // every admin-created notification always came back as
+        // ADMIN_ANNOUNCEMENT (displayed as "system") no matter what was
+        // picked in the form. Admin-created notifications are always
+        // ADMIN_ANNOUNCEMENT server-side, so we no longer send `type` at
+        // all — the UI-level type the admin picks is instead remembered
+        // locally (see the notification-type override in
+        // features/notifications/notifications.ts) and re-applied after
+        // every fetch.
         target: payload.target,
         userId: payload.userId,
       })
       .pipe(
-        map((res) => mapNotificationFromApi(res.data.notification)),
+        map((res) => {
+          // Broadcast notifications can be created for many users at once,
+          // so the backend sometimes only returns a `count` instead of a
+          // single notification document. Previously this caused
+          // `mapNotificationFromApi(undefined)` to throw, which made a
+          // successful creation look like a failed request ("Failed to
+          // send notification") even though the notification(s) were
+          // already saved server-side. Fall back to a notification built
+          // from the submitted payload instead of crashing.
+          if (res.data.notification) {
+            return mapNotificationFromApi(res.data.notification);
+          }
+          return {
+            _id: `N${Date.now()}`,
+            title: payload.title,
+            message: payload.message,
+            type: payload.type,
+            target: payload.target,
+            userId: payload.userId,
+          };
+        }),
         catchError(this.handleError),
       );
   }

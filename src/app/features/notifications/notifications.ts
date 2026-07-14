@@ -8,6 +8,53 @@ import {
 } from '../../core/services/notifications';
 import { Notification } from '../../core/models/notification';
 
+const NOTIF_TYPE_OVERRIDES_KEY = 'badilni_admin_notification_type_overrides';
+
+interface NotifTypeOverride {
+  type: Notification['type'];
+}
+
+function overrideKey(title: string, message: string): string {
+  return `${title.trim()}::${message.trim()}`;
+}
+
+function readNotifTypeOverrides(): Record<string, NotifTypeOverride> {
+  try {
+    const raw = localStorage.getItem(NOTIF_TYPE_OVERRIDES_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, NotifTypeOverride>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeNotifTypeOverride(title: string, message: string, type: Notification['type']): void {
+  try {
+    const all = readNotifTypeOverrides();
+    all[overrideKey(title, message)] = { type };
+    localStorage.setItem(NOTIF_TYPE_OVERRIDES_KEY, JSON.stringify(all));
+  } catch {
+    // ignore storage errors (e.g. private browsing / storage full)
+  }
+}
+
+function removeNotifTypeOverride(title: string, message: string): void {
+  try {
+    const all = readNotifTypeOverrides();
+    const key = overrideKey(title, message);
+    if (key in all) {
+      delete all[key];
+      localStorage.setItem(NOTIF_TYPE_OVERRIDES_KEY, JSON.stringify(all));
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function applyNotifTypeOverride(notif: Notification): Notification {
+  const override = readNotifTypeOverrides()[overrideKey(notif.title, notif.message)];
+  return override ? { ...notif, type: override.type } : notif;
+}
+
 @Component({
   selector: 'app-notifications',
   standalone: true,
@@ -72,7 +119,9 @@ export class Notifications implements OnInit {
 
     this.notificationsService.getAll(params).subscribe({
       next: (res) => {
-        let notifications = res.data.notifications;
+        // Re-apply any locally-remembered type before filtering, since the
+        // backend's returned `type` can't be trusted (see note above).
+        let notifications = res.data.notifications.map(applyNotifTypeOverride);
 
         const keyword = this.searchKeyword().trim().toLowerCase();
         if (keyword) {
@@ -101,7 +150,7 @@ export class Notifications implements OnInit {
   private applyMockFilter(): void {
     this.isLoading.set(true);
 
-    let filtered = [...this.mockNotifications];
+    let filtered = this.mockNotifications.map(applyNotifTypeOverride);
 
     const keyword = this.searchKeyword().trim().toLowerCase();
     if (keyword) {
@@ -179,6 +228,10 @@ export class Notifications implements OnInit {
 
     this.notificationsService.send(payload).subscribe({
       next: () => {
+        // Remember the type the admin actually picked, since the backend
+        // will otherwise report it back as `system` regardless of what
+        // was submitted.
+        writeNotifTypeOverride(payload.title, payload.message, payload.type);
         this.sendLoading.set(false);
         this.closeSendModal();
         this.loadNotifications();
@@ -193,6 +246,7 @@ export class Notifications implements OnInit {
             target: payload.target,
           };
           this.mockNotifications.unshift(newNotif);
+          writeNotifTypeOverride(payload.title, payload.message, payload.type);
           this.sendLoading.set(false);
           this.closeSendModal();
           this.applyMockFilter();
@@ -205,12 +259,18 @@ export class Notifications implements OnInit {
   }
 
   onDelete(id: string): void {
+    const notif = this.notifications().find((n) => n._id === id);
+
     this.notificationsService.delete(id).subscribe({
-      next: () => this.loadNotifications(),
+      next: () => {
+        if (notif) removeNotifTypeOverride(notif.title, notif.message);
+        this.loadNotifications();
+      },
       error: () => {
         if (this.usingMock()) {
           const idx = this.mockNotifications.findIndex((n) => n._id === id);
           if (idx >= 0) this.mockNotifications.splice(idx, 1);
+          if (notif) removeNotifTypeOverride(notif.title, notif.message);
           this.applyMockFilter();
         }
       },
